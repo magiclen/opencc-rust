@@ -4,8 +4,12 @@ rust:
 - stable
 - beta
 - nightly
+addons:
+  apt:
+    packages:
+    - doxygen
+    - cmake
 install:
-- sudo apt install -y doxygen cmake
 - git clone https://github.com/BYVoid/OpenCC.git && cd OpenCC
 - make PREFIX=/usr && make PREFIX=/usr install
 - cd ..

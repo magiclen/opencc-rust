@@ -35,7 +35,7 @@ pub mod default_config_file_paths {
     /// Simplified Chinese to Traditional Chinese (Taiwan Standard) with Taiwanese idiom
     pub const S2TWP: &'static str = "s2twp.json";
     /// Traditional Chinese (Taiwan Standard) to Simplified Chinese with Mainland Chinese idiom
-    pub const TW2SP: &'static str = "tw2sp.json";
+    pub const TW2SP: &'static str = "/home/magiclen/OpenCC-linux/linux/中文 測試/opencc/tw2sp.json";
     /// Traditional Chinese (OpenCC Standard) to Taiwan Standard
     pub const T2TW: &'static str = "t2tw.json";
     /// Traditional Chinese (OpenCC Standard) to Hong Kong Standard
