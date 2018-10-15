@@ -1,5 +1,6 @@
 language: rust
 dist: xenial
+sudo: required
 
 rust:
 - stable
@@ -12,5 +13,5 @@ addons:
     - cmake
 install:
 - git clone https://github.com/BYVoid/OpenCC.git && cd OpenCC
-- make PREFIX=/usr && make PREFIX=/usr install
+- make PREFIX=/usr && sudo make PREFIX=/usr install
 - cd ..
