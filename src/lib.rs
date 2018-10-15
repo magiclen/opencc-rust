@@ -1,7 +1,6 @@
 extern crate libc;
 
 use libc::{c_int, size_t, c_void, c_char};
-use libc::wchar_t;
 
 use std::ffi::{CStr, CString};
 use std::mem::transmute;
@@ -9,7 +8,6 @@ use std::mem::transmute;
 #[link(name = "opencc")]
 extern "C" {
     pub fn opencc_open(config_file_path: *const c_char) -> *mut c_void;
-    pub fn opencc_open_w(config_file_path: *const wchar_t) -> *mut c_void;
     pub fn opencc_close(opencc: *mut c_void) -> c_int;
     pub fn opencc_convert_utf8(opencc: *mut c_void, input: *const c_char, length: size_t) -> *mut c_char;
     pub fn opencc_convert_utf8_to_buffer(opencc: *mut c_void, input: *const c_char, length: size_t, output: *mut c_char) -> size_t;
@@ -35,7 +33,7 @@ pub mod default_config_file_paths {
     /// Simplified Chinese to Traditional Chinese (Taiwan Standard) with Taiwanese idiom
     pub const S2TWP: &'static str = "s2twp.json";
     /// Traditional Chinese (Taiwan Standard) to Simplified Chinese with Mainland Chinese idiom
-    pub const TW2SP: &'static str = "/home/magiclen/OpenCC-linux/linux/中文 測試/opencc/tw2sp.json";
+    pub const TW2SP: &'static str = "tw2sp.json";
     /// Traditional Chinese (OpenCC Standard) to Taiwan Standard
     pub const T2TW: &'static str = "t2tw.json";
     /// Traditional Chinese (OpenCC Standard) to Hong Kong Standard
@@ -62,7 +60,7 @@ impl OpenCC {
             transmute(opencc)
         };
         if v == !0 {
-            return Err("Cannot use this config file path.");
+            return Err("Cannot use this config file path. The path needs to be encoded to ISO-8859-1.");
         }
 
         Ok(OpenCC {
@@ -89,7 +87,7 @@ impl OpenCC {
         result
     }
 
-    pub fn convert_owned(&self, input: &str, output: String) -> String {
+    pub fn convert_to_buffer(&self, input: &str, output: String) -> String {
         let length = input.len();
         let input = CString::new(input).unwrap();
 
@@ -138,11 +136,11 @@ mod tests {
     }
 
     #[test]
-    fn test_tw2sp_owned() {
+    fn test_tw2sp_to_buffer() {
         let s = String::from("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。");
 
         let opencc = OpenCC::new(default_config_file_paths::TW2SP).unwrap();
-        let s = opencc.convert_owned("雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。", s);
+        let s = opencc.convert_to_buffer("雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。", s);
 
         assert_eq!("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。",
                    &s);
@@ -156,11 +154,11 @@ mod tests {
     }
 
     #[test]
-    fn test_s2twp_owned() {
+    fn test_s2twp_to_buffer() {
         let s = String::from("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。");
 
         let opencc = OpenCC::new(default_config_file_paths::S2TWP).unwrap();
-        let s = opencc.convert_owned("虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。", s);
+        let s = opencc.convert_to_buffer("虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。", s);
 
         assert_eq!("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。",
                    &s);
