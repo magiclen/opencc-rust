@@ -1,0 +1,25 @@
+[package]
+name = "opencc-rust"
+version = "0.1.0"
+authors = ["Magic Len <len@magiclen.org>"]
+repository = "https://github.com/magiclen/opencc-rust"
+homepage = "https://magiclen.org/opencc-rust"
+keywords = ["Chinese", "opencc", "中文轉換", "繁簡轉換"]
+categories = ["external-ffi-bindings", "localization"]
+description= "Open Chinese Convert(OpenCC, 開放中文轉換) binding for Rust for conversion between Traditional Chinese and Simplified Chinese."
+readme = "README.md"
+license = "Apache-2.0"
+
+[badges]
+travis-ci = { repository = "magiclen/opencc-rust", branch = "master" }
+appveyor = { repository = "magiclen/opencc-rust", branch = "master", service = "github" }
+
+[dependencies]
+libc = "0.2.43"
+
+[build-dependencies]
+bindgen = "0.42.2"
+pkg-config = "0.3.14"
+
+[features]
+no-default-config-file-names = []
