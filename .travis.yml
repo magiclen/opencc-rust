@@ -4,6 +4,10 @@ rust:
 - stable
 - beta
 - nightly
+install:
+- git clone https://github.com/BYVoid/OpenCC.git && cd OpenCC
+- make PREFIX=/usr && make PREFIX=/usr/local install
+- cd ..
 os:
 - linux
 - osx
