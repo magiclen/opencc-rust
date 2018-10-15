@@ -51,7 +51,7 @@ unsafe impl Send for OpenCC {}
 unsafe impl Sync for OpenCC {}
 
 impl OpenCC {
-    pub fn new(config_file_path: &str) -> OpenCC {
+    pub fn new(config_file_path: &str) -> Result<OpenCC, &'static str> {
         let config_file_path = CString::new(config_file_path).unwrap();
 
         let opencc = unsafe {
@@ -62,12 +62,12 @@ impl OpenCC {
             transmute(opencc)
         };
         if v == !0 {
-            panic!("Cannot use this config file path.");
+            return Err("Cannot use this config file path.");
         }
 
-        OpenCC {
+        Ok(OpenCC {
             opencc
-        }
+        })
     }
 
     pub fn convert(&self, input: &str) -> String {
@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn test_tw2sp() {
-        let opencc = OpenCC::new(default_config_file_paths::TW2SP);
+        let opencc = OpenCC::new(default_config_file_paths::TW2SP).unwrap();
         assert_eq!("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。",
                    &opencc.convert("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。"));
     }
@@ -141,7 +141,7 @@ mod tests {
     fn test_tw2sp_owned() {
         let s = String::from("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。");
 
-        let opencc = OpenCC::new(default_config_file_paths::TW2SP);
+        let opencc = OpenCC::new(default_config_file_paths::TW2SP).unwrap();
         let s = opencc.convert_owned("雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。", s);
 
         assert_eq!("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。",
@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_s2twp() {
-        let opencc = OpenCC::new(default_config_file_paths::S2TWP);
+        let opencc = OpenCC::new(default_config_file_paths::S2TWP).unwrap();
         assert_eq!("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。",
                    &opencc.convert("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。"));
     }
@@ -159,7 +159,7 @@ mod tests {
     fn test_s2twp_owned() {
         let s = String::from("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。");
 
-        let opencc = OpenCC::new(default_config_file_paths::S2TWP);
+        let opencc = OpenCC::new(default_config_file_paths::S2TWP).unwrap();
         let s = opencc.convert_owned("虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。", s);
 
         assert_eq!("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。",

@@ -5,9 +5,9 @@ rust:
 - beta
 - nightly
 install:
+- sudo apt install -y doxygen cmake
 - git clone https://github.com/BYVoid/OpenCC.git && cd OpenCC
-- make PREFIX=/usr && make PREFIX=/usr/local install
+- make PREFIX=/usr && make PREFIX=/usr install
 - cd ..
 os:
 - linux
-- osx
