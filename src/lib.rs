@@ -11,7 +11,7 @@ use libc::{c_int, size_t, c_void, c_char};
 
 use std::ffi::{CStr, CString};
 use std::mem::transmute;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::fs::{self, File};
 use std::io::Write;
 
@@ -89,7 +89,6 @@ new_sd_instance!(TWVARIANTS_REV_OCD, "TWVariantsRev.ocd");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TWVARIANTS_REV_PHRASES_OCD, "TWVariantsRevPhrases.ocd");
 
-#[cfg(feature = "static-dictionaries")]
 /// Default configs.
 #[derive(Copy, Clone)]
 pub enum DefaultConfig {
@@ -115,30 +114,28 @@ pub enum DefaultConfig {
     T2HK,
 }
 
+impl DefaultConfig {
+    /// Get the file name for this default config.
+    pub fn get_file_name(&self) -> &'static str {
+        match self {
+            DefaultConfig::S2T => "s2t.json",
+            DefaultConfig::T2S => "t2s.json",
+            DefaultConfig::S2TW => "s2tw.json",
+            DefaultConfig::TW2S => "tw2s.json",
+            DefaultConfig::S2HK => "s2hk.json",
+            DefaultConfig::HK2S => "hk2s.json",
+            DefaultConfig::S2TWP => "s2twp.json",
+            DefaultConfig::TW2SP => "tw2sp.json",
+            DefaultConfig::T2TW => "t2tw.json",
+            DefaultConfig::T2HK => "t2hk.json",
+        }
+    }
+}
 
-#[cfg(not(feature = "no-default-config-file-names"))]
-/// Default config file names.
-pub mod default_config_file_paths {
-    /// Simplified Chinese to Traditional Chinese
-    pub const S2T: &'static str = "s2t.json";
-    /// Traditional Chinese to Simplified Chinese
-    pub const T2S: &'static str = "t2s.json";
-    /// Simplified Chinese to Traditional Chinese (Taiwan Standard)
-    pub const S2TW: &'static str = "s2tw.json";
-    /// Traditional Chinese (Taiwan Standard) to Simplified Chinese
-    pub const TW2S: &'static str = "tw2s.json";
-    /// Simplified Chinese to Traditional Chinese (Hong Kong Standard)
-    pub const S2HK: &'static str = "s2hk.json";
-    /// Traditional Chinese (Hong Kong Standard) to Simplified Chinese
-    pub const HK2S: &'static str = "hk2s.json";
-    /// Simplified Chinese to Traditional Chinese (Taiwan Standard) with Taiwanese idiom
-    pub const S2TWP: &'static str = "s2twp.json";
-    /// Traditional Chinese (Taiwan Standard) to Simplified Chinese with Mainland Chinese idiom
-    pub const TW2SP: &'static str = "tw2sp.json";
-    /// Traditional Chinese (OpenCC Standard) to Taiwan Standard
-    pub const T2TW: &'static str = "t2tw.json";
-    /// Traditional Chinese (OpenCC Standard) to Hong Kong Standard
-    pub const T2HK: &'static str = "t2hk.json";
+impl AsRef<Path> for DefaultConfig {
+    fn as_ref(&self) -> &Path {
+        Path::new(self.get_file_name())
+    }
 }
 
 pub struct OpenCC {
@@ -150,6 +147,7 @@ unsafe impl Send for OpenCC {}
 unsafe impl Sync for OpenCC {}
 
 impl OpenCC {
+    /// Create a new OpenCC instance through a file provided by its path.
     pub fn new<P: AsRef<Path>>(config_file_path: P) -> Result<OpenCC, &'static str> {
         let config_file_path = CString::new(config_file_path.as_ref().as_os_str().to_str().unwrap()).unwrap();
 
@@ -169,7 +167,10 @@ impl OpenCC {
         })
     }
 
-    pub fn convert(&self, input: &str) -> String {
+    /// Convert a string to another string.
+    pub fn convert<S: AsRef<str>>(&self, input: S) -> String {
+        let input = input.as_ref();
+
         let length = input.len();
         let input = CString::new(input).unwrap();
 
@@ -188,7 +189,10 @@ impl OpenCC {
         result
     }
 
-    pub fn convert_to_buffer(&self, input: &str, output: String) -> String {
+    /// Convert a string to another string and store into a buffer.
+    pub fn convert_to_buffer<S: AsRef<str>>(&self, input: S, output: String) -> String {
+        let input = input.as_ref();
+        
         let length = input.len();
         let input = CString::new(input).unwrap();
 
@@ -255,13 +259,6 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(path: P, config: DefaultConf
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
         }
-        DefaultConfig::TW2S => {
-            output_data.push(&TW2S_JSON);
-            output_data.push(&TSPHRASES_OCD);
-            output_data.push(&TSCHARACTERS_OCD);
-            output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
-            output_data.push(&TWVARIANTS_REV_OCD);
-        }
         DefaultConfig::S2HK => {
             output_data.push(&S2HK_JSON);
             output_data.push(&STPHRASES_OCD);
@@ -299,7 +296,6 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(path: P, config: DefaultConf
             output_data.push(&T2HK_JSON);
             output_data.push(&HKVARIANTS_OCD);
         }
-        _ => {}
     }
 
     for data in output_data {
@@ -376,7 +372,7 @@ mod tests {
 
     #[test]
     fn test_tw2sp() {
-        let opencc = OpenCC::new("tw2sp.json").unwrap();
+        let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
         assert_eq!("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。",
                    &opencc.convert("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。"));
     }
@@ -385,7 +381,7 @@ mod tests {
     fn test_tw2sp_to_buffer() {
         let s = String::from("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。");
 
-        let opencc = OpenCC::new("tw2sp.json").unwrap();
+        let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
         let s = opencc.convert_to_buffer("雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。", s);
 
         assert_eq!("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。",
@@ -394,7 +390,7 @@ mod tests {
 
     #[test]
     fn test_s2twp() {
-        let opencc = OpenCC::new("s2twp.json").unwrap();
+        let opencc = OpenCC::new(DefaultConfig::S2TWP).unwrap();
         assert_eq!("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。",
                    &opencc.convert("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。"));
     }
@@ -403,7 +399,7 @@ mod tests {
     fn test_s2twp_to_buffer() {
         let s = String::from("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。");
 
-        let opencc = OpenCC::new("s2twp.json").unwrap();
+        let opencc = OpenCC::new(DefaultConfig::S2TWP).unwrap();
         let s = opencc.convert_to_buffer("虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。", s);
 
         assert_eq!("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。",
