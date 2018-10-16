@@ -18,7 +18,7 @@ To compile this crate, you need to compile the OpenCC C++ library first. You can
 
 ## Examples
 
-```
+```rust
 extern crate opencc_rust;
 
 use opencc_rust::*;
@@ -34,7 +34,7 @@ let s = opencc.convert_to_buffer("，秋月無邊", s);
 assert_eq!("凉风有讯，秋月无边", &s);
 ```
 
-```
+```rust
 extern crate opencc_rust;
 
 use opencc_rust::*;
@@ -65,7 +65,7 @@ The default OpenCC dictionaries will be compiled into the binary file by `lazy_s
 
 For example,
 
-```rust,ignore
+```rust
 extern crate opencc_rust;
 
 use opencc_rust::*;
