@@ -68,7 +68,7 @@
 //!
 //! generate_static_dictionary(&output_path, DefaultConfig::TW2SP).unwrap();
 //!
-//! let opencc = OpenCC::new(Path::join(&output_path, Path::new("tw2sp.json"))).unwrap();
+//! let opencc = OpenCC::new(Path::join(&output_path, DefaultConfig::TW2SP)).unwrap();
 //!
 //! assert_eq!("凉风有讯", &opencc.convert("涼風有訊"));
 //! ```
@@ -503,7 +503,7 @@ mod tests {
 
         let s = String::from("無");
 
-        let opencc = OpenCC::new(Path::join(&output_path, Path::new("tw2sp.json"))).unwrap();
+        let opencc = OpenCC::new(Path::join(&output_path, DefaultConfig::TW2SP)).unwrap();
 
         assert_eq!("无", &opencc.convert(&s));
     }
