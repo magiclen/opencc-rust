@@ -8,7 +8,7 @@ Open Chinese Convert(OpenCC, 開放中文轉換) binding for the Rust language f
 
 ## Compilation
 
-To compile this crate, you need to compile the OpenCC C++ library first. You can install OpenCC in your operating system, or in somewhere in your file system. As for the latter, you need set the following environment variables to link the OpenCC library:
+To compile this crate, you need to compile the OpenCC C++ library first. You can install OpenCC in your operating system, or in somewhere in your file system. As for the latter, you need to set the following environment variables to link the OpenCC library:
 
 * `OPENCC_LIB_DIRS`: The directories of library files, like `-L`. Use `:` to separate.
 * `OPENCC_LIBS`: The library names that you want to link, like `-l`. Use `:` to separate. Typically, it only contains **opencc**.
