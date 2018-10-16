@@ -6,7 +6,7 @@ use std::process::Command;
 use std::path::PathBuf;
 use std::collections::HashSet;
 
-const MIN_VERSION: &'static str = "1.0.5";
+const MIN_VERSION: &'static str = "1.0.0";
 const MAX_VERSION: &'static str = "1.1.0";
 
 fn main() {

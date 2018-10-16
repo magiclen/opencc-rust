@@ -1,3 +1,78 @@
+//! Open Chinese Convert(OpenCC, 開放中文轉換) binding for the Rust language for conversion between Traditional Chinese and Simplified Chinese.
+//!
+//! ## Compilation
+//!
+//! To compile this crate, you need to compile the OpenCC C++ library first. You can install OpenCC in your operating system, or in somewhere in your file system. As for the latter, you need set the following environment variables to link the OpenCC library:
+//!
+//! * `OPENCC_LIB_DIRS`: The directories of library files, like `-L`. Use `:` to separate.
+//! * `OPENCC_LIBS`: The library names that you want to link, like `-l`. Use `:` to separate. Typically, it only contains **opencc**.
+//! * `OPENCC_INCLUDE_DIRS`: The directories of header files, like `-i`. Use `:` to separate.
+//! * `OPENCC_STATIC`: Whether to use `static` or `dylib`.
+//! * `OPENCC_DYLIB_STDCPP`: If you use `static` linking, and your OpenCC library is compiled by the GNU C, this environment variables should be set.
+//!
+//! ## Examples
+//!
+//! ```
+//! extern crate opencc_rust;
+//!
+//! use opencc_rust::*;
+//!
+//! let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
+//!
+//! let s = opencc.convert("涼風有訊");
+//!
+//! assert_eq!("凉风有讯", &s);
+//!
+//! let s = opencc.convert_to_buffer("，秋月無邊", s);
+//!
+//! assert_eq!("凉风有讯，秋月无边", &s);
+//! ```
+//!
+//! ```
+//! extern crate opencc_rust;
+//!
+//! use opencc_rust::*;
+//!
+//! let opencc = OpenCC::new(DefaultConfig::S2TWP).unwrap();
+//!
+//! let s = opencc.convert("凉风有讯");
+//!
+//! assert_eq!("涼風有訊", &s);
+//!
+//! let s = opencc.convert_to_buffer("，秋月无边", s);
+//!
+//! assert_eq!("涼風有訊，秋月無邊", &s);
+//! ```
+//!
+//! ## Static Dictionaries
+//!
+//! Usually, OpenCC needs to be executed on an environment where OpenCC is installed. If you want to make it portable, you can open the `static-dictionaries` feature.
+//!
+//! ```toml
+//! [dependencies.opencc-rust]
+//! version = "*"
+//! features = ["static-dictionaries"]
+//! ```
+//! Then, the `generate_static_dictionary` and `generate_static_dictionaries` are available.
+//!
+//! The default OpenCC dictionaries will be compiled into the binary file by `lazy_static_include` crate. And you can use the two functions to recover them on demand.
+//!
+//! For example,
+//!
+//! ```rust,ignore
+//! extern crate opencc_rust;
+//!
+//! use opencc_rust::*;
+//!
+//! let output_path = "/path/to/dictionaries-directory";
+//!
+//! generate_static_dictionary(&output_path, DefaultConfig::TW2SP).unwrap();
+//!
+//! let opencc = OpenCC::new(Path::join(&output_path, Path::new("tw2sp.json"))).unwrap();
+//!
+//! assert_eq!("凉风有讯", &opencc.convert("涼風有訊"));
+//! ```
+
 extern crate libc;
 #[cfg(feature = "static-dictionaries")]
 #[macro_use]
@@ -144,6 +219,7 @@ impl AsRef<str> for DefaultConfig {
     }
 }
 
+/// OpenCC binding for Rust.
 pub struct OpenCC {
     opencc: *mut c_void,
 }
@@ -152,7 +228,6 @@ unsafe impl Send for OpenCC {}
 
 unsafe impl Sync for OpenCC {}
 
-/// OpenCC binding for Rust.
 impl OpenCC {
     /// Create a new OpenCC instance through a file provided by its path.
     pub fn new<P: AsRef<Path>>(config_file_path: P) -> Result<OpenCC, &'static str> {
