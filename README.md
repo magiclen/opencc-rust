@@ -14,7 +14,7 @@ To compile this crate, you need to compile the OpenCC C++ library first. You can
 * `OPENCC_LIBS`: The library names that you want to link, like `-l`. Use `:` to separate. Typically, it only contains **opencc**.
 * `OPENCC_INCLUDE_DIRS`: The directories of header files, like `-i`. Use `:` to separate.
 * `OPENCC_STATIC`: Whether to use `static` or `dylib`.
-* `OPENCC_DYLIB_STDCPP`: If you use `static` linking, and your OpenCC library is compiled by the GNU C, this environment variables should be set.
+* `OPENCC_DYLIB_STDCPP`: If you use `static` linking, and your OpenCC library is compiled by the GNU C, this environment variable should be set.
 
 ## Examples
 
