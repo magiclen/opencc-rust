@@ -53,7 +53,7 @@
 //! version = "*"
 //! features = ["static-dictionaries"]
 //! ```
-//! Then, the `generate_static_dictionary` and `generate_static_dictionaries` are available.
+//! Then, the `generate_static_dictionary` and `generate_static_dictionaries` functions are available.
 //!
 //! The default OpenCC dictionaries will be compiled into the binary file by `lazy_static_include` crate. And you can use the two functions to recover them on demand.
 //!
