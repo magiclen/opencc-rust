@@ -138,6 +138,12 @@ impl AsRef<Path> for DefaultConfig {
     }
 }
 
+impl AsRef<str> for DefaultConfig {
+    fn as_ref(&self) -> &str {
+        self.get_file_name()
+    }
+}
+
 pub struct OpenCC {
     opencc: *mut c_void,
 }
