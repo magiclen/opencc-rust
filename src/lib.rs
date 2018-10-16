@@ -46,7 +46,7 @@
 //!
 //! ## Static Dictionaries
 //!
-//! Usually, OpenCC needs to be executed on an environment where OpenCC is installed. If you want to make it portable, you can open the `static-dictionaries` feature.
+//! Usually, OpenCC needs to be executed on an environment where OpenCC is installed. If you want to make it portable, you can enable the `static-dictionaries` feature.
 //!
 //! ```toml
 //! [dependencies.opencc-rust]
