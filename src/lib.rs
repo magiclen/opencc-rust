@@ -87,7 +87,9 @@ use libc::{c_int, size_t, c_void, c_char};
 use std::ffi::{CStr, CString};
 use std::mem::transmute;
 use std::path::Path;
+#[cfg(feature = "static-dictionaries")]
 use std::fs::{self, File};
+#[cfg(feature = "static-dictionaries")]
 use std::io::Write;
 
 #[link(name = "opencc")]
