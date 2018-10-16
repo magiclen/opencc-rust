@@ -146,6 +146,7 @@ unsafe impl Send for OpenCC {}
 
 unsafe impl Sync for OpenCC {}
 
+/// OpenCC binding for Rust.
 impl OpenCC {
     /// Create a new OpenCC instance through a file provided by its path.
     pub fn new<P: AsRef<Path>>(config_file_path: P) -> Result<OpenCC, &'static str> {
@@ -192,7 +193,7 @@ impl OpenCC {
     /// Convert a string to another string and store into a buffer.
     pub fn convert_to_buffer<S: AsRef<str>>(&self, input: S, output: String) -> String {
         let input = input.as_ref();
-        
+
         let length = input.len();
         let input = CString::new(input).unwrap();
 
@@ -325,6 +326,7 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(path: P, config: DefaultConf
 }
 
 #[cfg(feature = "static-dictionaries")]
+/// Generate files for a specific dictionary. These files are used for opening a new OpenCC instance.
 pub fn generate_static_dictionary<P: AsRef<Path>>(path: P, config: DefaultConfig) -> Result<(), &'static str> {
     let path = path.as_ref();
 
@@ -343,6 +345,7 @@ pub fn generate_static_dictionary<P: AsRef<Path>>(path: P, config: DefaultConfig
 }
 
 #[cfg(feature = "static-dictionaries")]
+/// Generate files for specific dictionaries. These files are used for opening a new OpenCC instance.
 pub fn generate_static_dictionaries<P: AsRef<Path>>(path: P, configs: &[DefaultConfig]) -> Result<(), &'static str> {
     let path = path.as_ref();
 
