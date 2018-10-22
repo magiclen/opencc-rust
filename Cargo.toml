@@ -1,6 +1,6 @@
 [package]
 name = "opencc-rust"
-version = "1.0.4"
+version = "1.0.5"
 authors = ["Magic Len <len@magiclen.org>"]
 repository = "https://github.com/magiclen/opencc-rust"
 homepage = "https://magiclen.org/opencc-rust"
@@ -24,7 +24,7 @@ bindgen = "0.42.2"
 pkg-config = "0.3.14"
 
 [features]
-static-dictionaries = ["lazy-static-include"]
+static-dictionaries = ["lazy-static-include", "lazy_static"]
 
 [package.metadata.docs.rs]
 all-features = true
