@@ -1,77 +1,79 @@
-//! Open Chinese Convert(OpenCC, 開放中文轉換) binding for the Rust language for conversion between Traditional Chinese and Simplified Chinese.
-//!
-//! ## Compilation
-//!
-//! To compile this crate, you need to compile the OpenCC C++ library first. You can install OpenCC in your operating system, or in somewhere in your file system. As for the latter, you need to set the following environment variables to link the OpenCC library:
-//!
-//! * `OPENCC_LIB_DIRS`: The directories of library files, like `-L`. Use `:` to separate.
-//! * `OPENCC_LIBS`: The library names that you want to link, like `-l`. Use `:` to separate. Typically, it only contains **opencc**.
-//! * `OPENCC_INCLUDE_DIRS`: The directories of header files, like `-i`. Use `:` to separate.
-//! * `OPENCC_STATIC`: Whether to use `static` or `dylib`.
-//! * `OPENCC_DYLIB_STDCPP`: If you use `static` linking, and your OpenCC library is compiled by the GNU C, this environment variable should be set.
-//!
-//! ## Examples
-//!
-//! ```
-//! extern crate opencc_rust;
-//!
-//! use opencc_rust::*;
-//!
-//! let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
-//!
-//! let s = opencc.convert("涼風有訊");
-//!
-//! assert_eq!("凉风有讯", &s);
-//!
-//! let s = opencc.convert_to_buffer("，秋月無邊", s);
-//!
-//! assert_eq!("凉风有讯，秋月无边", &s);
-//! ```
-//!
-//! ```
-//! extern crate opencc_rust;
-//!
-//! use opencc_rust::*;
-//!
-//! let opencc = OpenCC::new(DefaultConfig::S2TWP).unwrap();
-//!
-//! let s = opencc.convert("凉风有讯");
-//!
-//! assert_eq!("涼風有訊", &s);
-//!
-//! let s = opencc.convert_to_buffer("，秋月无边", s);
-//!
-//! assert_eq!("涼風有訊，秋月無邊", &s);
-//! ```
-//!
-//! ## Static Dictionaries
-//!
-//! Usually, OpenCC needs to be executed on an environment where OpenCC is installed. If you want to make it portable, you can enable the `static-dictionaries` feature.
-//!
-//! ```toml
-//! [dependencies.opencc-rust]
-//! version = "*"
-//! features = ["static-dictionaries"]
-//! ```
-//! Then, the `generate_static_dictionary` and `generate_static_dictionaries` functions are available.
-//!
-//! The default OpenCC dictionaries will be compiled into the binary file by `lazy_static_include` crate. And you can use the two functions to recover them on demand.
-//!
-//! For example,
-//!
-//! ```rust,ignore
-//! extern crate opencc_rust;
-//!
-//! use opencc_rust::*;
-//!
-//! let output_path = "/path/to/dictionaries-directory";
-//!
-//! generate_static_dictionary(&output_path, DefaultConfig::TW2SP).unwrap();
-//!
-//! let opencc = OpenCC::new(Path::join(&output_path, DefaultConfig::TW2SP)).unwrap();
-//!
-//! assert_eq!("凉风有讯", &opencc.convert("涼風有訊"));
-//! ```
+/*!
+Open Chinese Convert(OpenCC, 開放中文轉換) binding for the Rust language for conversion between Traditional Chinese and Simplified Chinese.
+
+## Compilation
+
+To compile this crate, you need to compile the OpenCC C++ library first. You can install OpenCC in your operating system, or in somewhere in your file system. As for the latter, you need to set the following environment variables to link the OpenCC library:
+
+* `OPENCC_LIB_DIRS`: The directories of library files, like `-L`. Use `:` to separate.
+* `OPENCC_LIBS`: The library names that you want to link, like `-l`. Use `:` to separate. Typically, it only contains **opencc**.
+* `OPENCC_INCLUDE_DIRS`: The directories of header files, like `-i`. Use `:` to separate.
+* `OPENCC_STATIC`: Whether to use `static` or `dylib`.
+* `OPENCC_DYLIB_STDCPP`: If you use `static` linking, and your OpenCC library is compiled by the GNU C, this environment variable should be set.
+
+## Examples
+
+```rust
+extern crate opencc_rust;
+
+use opencc_rust::*;
+
+let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
+
+let s = opencc.convert("涼風有訊");
+
+assert_eq!("凉风有讯", &s);
+
+let s = opencc.convert_to_buffer("，秋月無邊", s);
+
+assert_eq!("凉风有讯，秋月无边", &s);
+```
+
+```rust
+extern crate opencc_rust;
+
+use opencc_rust::*;
+
+let opencc = OpenCC::new(DefaultConfig::S2TWP).unwrap();
+
+let s = opencc.convert("凉风有讯");
+
+assert_eq!("涼風有訊", &s);
+
+let s = opencc.convert_to_buffer("，秋月无边", s);
+
+assert_eq!("涼風有訊，秋月無邊", &s);
+```
+
+## Static Dictionaries
+
+Usually, OpenCC needs to be executed on an environment where OpenCC is installed. If you want to make it portable, you can enable the `static-dictionaries` feature.
+
+```toml
+[dependencies.opencc-rust]
+version = "*"
+features = ["static-dictionaries"]
+```
+Then, the `generate_static_dictionary` and `generate_static_dictionaries` functions are available.
+
+The default OpenCC dictionaries will be compiled into the binary file by `lazy_static_include` crate. And you can use the two functions to recover them on demand.
+
+For example,
+
+```rust,ignore
+extern crate opencc_rust;
+
+use opencc_rust::*;
+
+let output_path = "/path/to/dictionaries-directory";
+
+generate_static_dictionary(&output_path, DefaultConfig::TW2SP).unwrap();
+
+let opencc = OpenCC::new(Path::join(&output_path, DefaultConfig::TW2SP)).unwrap();
+
+assert_eq!("凉风有讯", &opencc.convert("涼風有訊"));
+```
+*/
 
 extern crate libc;
 #[cfg(feature = "static-dictionaries")]
@@ -448,63 +450,4 @@ pub fn generate_static_dictionaries<P: AsRef<Path>>(path: P, configs: &[DefaultC
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[cfg(feature = "static-dictionaries")]
-    use std::env;
-
-    #[test]
-    fn test_tw2sp() {
-        let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
-        assert_eq!("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。",
-                   &opencc.convert("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。"));
-    }
-
-    #[test]
-    fn test_tw2sp_to_buffer() {
-        let s = String::from("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。");
-
-        let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
-        let s = opencc.convert_to_buffer("雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。", s);
-
-        assert_eq!("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。",
-                   &s);
-    }
-
-    #[test]
-    fn test_s2twp() {
-        let opencc = OpenCC::new(DefaultConfig::S2TWP).unwrap();
-        assert_eq!("涼風有訊，秋月無邊，虧我思嬌的情緒好比度日如年。雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。",
-                   &opencc.convert("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。"));
-    }
-
-    #[test]
-    fn test_s2twp_to_buffer() {
-        let s = String::from("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。");
-
-        let opencc = OpenCC::new(DefaultConfig::S2TWP).unwrap();
-        let s = opencc.convert_to_buffer("虽然我不是玉树临风，潇洒倜傥，但我有广阔的胸襟，加强劲的臂弯。", s);
-
-        assert_eq!("凉风有讯，秋月无边，亏我思娇的情绪好比度日如年。雖然我不是玉樹臨風，瀟灑倜儻，但我有廣闊的胸襟，加強勁的臂彎。",
-                   &s);
-    }
-
-    #[cfg(feature = "static-dictionaries")]
-    #[test]
-    fn test_generate_static_dictionary() {
-        let cwd = env::current_dir().unwrap();
-
-        let output_path = Path::join(&cwd, "dict_output");
-
-        generate_static_dictionary(&output_path, DefaultConfig::TW2SP).unwrap();
-
-        let s = String::from("無");
-
-        let opencc = OpenCC::new(Path::join(&output_path, DefaultConfig::TW2SP)).unwrap();
-
-        assert_eq!("无", &opencc.convert(&s));
-    }
 }
