@@ -8,7 +8,7 @@ use std::path::Path;
 use opencc_rust::{OpenCC, DefaultConfig, generate_static_dictionary};
 
 #[test]
-fn test_generate_static_dictionary() {
+fn generate_static_dictionary() {
     let cwd = env::current_dir().unwrap();
 
     let output_path = Path::join(&cwd, "dict_output");
