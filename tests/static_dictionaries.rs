@@ -5,7 +5,7 @@ extern crate opencc_rust;
 use std::env;
 use std::path::Path;
 
-use opencc_rust::{OpenCC, DefaultConfig, generate_static_dictionary};
+use opencc_rust::{OpenCC, DefaultConfig};
 
 #[test]
 fn generate_static_dictionary() {
@@ -13,7 +13,7 @@ fn generate_static_dictionary() {
 
     let output_path = Path::join(&cwd, "dict_output");
 
-    generate_static_dictionary(&output_path, DefaultConfig::TW2SP).unwrap();
+    opencc_rust::generate_static_dictionary(&output_path, DefaultConfig::TW2SP).unwrap();
 
     let s = String::from("無");
 

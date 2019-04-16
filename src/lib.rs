@@ -112,8 +112,8 @@ macro_rules! new_sd_instance {
     ($name:ident, $file_name:expr) => {
         lazy_static! {
             static ref $name: SD = {
-                lazy_static_include_bytes!(Res, concat!("opencc/", $file_name));
-                SD($file_name, &Res)
+                lazy_static_include_bytes!(RES, concat!("opencc/", $file_name));
+                SD($file_name, &RES)
             };
         }
     };
