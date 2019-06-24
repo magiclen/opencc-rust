@@ -169,7 +169,7 @@ new_sd_instance!(TWVARIANTS_REV_OCD, "TWVariantsRev.ocd");
 new_sd_instance!(TWVARIANTS_REV_PHRASES_OCD, "TWVariantsRevPhrases.ocd");
 
 /// Default configs.
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum DefaultConfig {
     /// Simplified Chinese to Traditional Chinese
     S2T,
