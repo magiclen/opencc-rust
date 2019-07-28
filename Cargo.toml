@@ -1,6 +1,6 @@
 [package]
 name = "opencc-rust"
-version = "1.0.10"
+version = "1.0.11"
 authors = ["Magic Len <len@magiclen.org>"]
 repository = "https://github.com/magiclen/opencc-rust"
 homepage = "https://magiclen.org/opencc-rust"
@@ -10,9 +10,9 @@ description= "Open Chinese Convert(OpenCC, 開放中文轉換) binding for the R
 readme = "README.md"
 license = "Apache-2.0"
 
-[badges]
-travis-ci = { repository = "magiclen/opencc-rust", branch = "master" }
-appveyor = { repository = "magiclen/opencc-rust", branch = "master", service = "github" }
+[badges.travis-ci]
+repository = "magiclen/opencc-rust"
+branch = "master"
 
 [dependencies]
 libc = "0.2.43"

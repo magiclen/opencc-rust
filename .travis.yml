@@ -1,17 +1,36 @@
 language: rust
-dist: xenial
-sudo: required
 
 rust:
-- stable
-- beta
-- nightly
-addons:
-  apt:
-    packages:
-    - doxygen
-    - cmake
+  - stable
+  - beta
+  - nightly
+
+os:
+  - linux
+
+env:
+  -
+  - FEATURES="static-dictionaries"
+
 install:
-- git clone https://github.com/BYVoid/OpenCC.git && cd OpenCC
-- make PREFIX=/usr && sudo make PREFIX=/usr install
-- cd ..
+  - sudo apt install doxygen cmake
+  - git clone https://github.com/BYVoid/OpenCC.git && cd OpenCC
+  - make PREFIX=/usr && sudo make PREFIX=/usr install
+
+matrix:
+  include:
+    - rust: stable
+      os: linux
+      env: TARGET=x86_64-unknown-linux-musl
+      install: rustup target add $TARGET
+      script: cargo test --target $TARGET
+    - rust: beta
+      os: linux
+      env: TARGET=x86_64-unknown-linux-musl
+      install: rustup target add $TARGET
+      script: cargo test --target $TARGET
+    - rust: nightly
+      os: linux
+      env: TARGET=x86_64-unknown-linux-musl
+      install: rustup target add $TARGET
+      script: cargo test --target $TARGET
