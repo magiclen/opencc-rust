@@ -13,6 +13,7 @@ env:
   - FEATURES="static-dictionaries"
 
 install:
+  - sudo apt update
   - sudo apt install doxygen cmake
   - git clone https://github.com/BYVoid/OpenCC.git && cd OpenCC
   - make PREFIX=/usr && sudo make PREFIX=/usr install
