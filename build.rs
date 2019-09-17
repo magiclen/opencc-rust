@@ -1,9 +1,9 @@
 extern crate pkg_config;
 
-use std::env;
-use std::process::Command;
-use std::path::PathBuf;
 use std::collections::HashSet;
+use std::env;
+use std::path::PathBuf;
+use std::process::Command;
 
 const MIN_VERSION: &'static str = "1.0.0";
 const MAX_VERSION: &'static str = "1.1.0";
@@ -59,7 +59,7 @@ fn main() {
     match kind.as_ref().map(|s| &s[..]) {
         Ok("0") => (),
         Ok(_) => println!("cargo:rustc-link-lib=dylib=stdc++"),
-        Err(_) => ()
+        Err(_) => (),
     }
 }
 
@@ -74,9 +74,7 @@ fn find_opencc_lib_dirs() -> Vec<PathBuf> {
     env::var("OPENCC_LIB_DIRS")
         .map(|x| x.split(":").map(PathBuf::from).collect::<Vec<PathBuf>>())
         .or_else(|_| Ok(vec![find_opencc_dir()?.join("lib")]))
-        .or_else(|_: env::VarError| -> Result<_, env::VarError> {
-            Ok(run_pkg_config().link_paths)
-        })
+        .or_else(|_: env::VarError| -> Result<_, env::VarError> { Ok(run_pkg_config().link_paths) })
         .expect("Couldn't find OpenCC library directory")
 }
 
@@ -93,8 +91,7 @@ fn find_opencc_include_dirs() -> Vec<PathBuf> {
 
 fn find_opencc_dir() -> Result<PathBuf, env::VarError> {
     println!("cargo:rerun-if-env-changed=OPENCC_DIR");
-    env::var("OPENCC_DIR")
-        .map(PathBuf::from)
+    env::var("OPENCC_DIR").map(PathBuf::from)
 }
 
 fn determine_mode<T: AsRef<str>>(libdirs: &Vec<PathBuf>, libs: &[T]) -> &'static str {
@@ -106,19 +103,21 @@ fn determine_mode<T: AsRef<str>>(libdirs: &Vec<PathBuf>, libs: &[T]) -> &'static
         None => {}
     }
 
-    let files = libdirs.into_iter().flat_map(|d| d.read_dir().unwrap())
+    let files = libdirs
+        .into_iter()
+        .flat_map(|d| d.read_dir().unwrap())
         .map(|e| e.unwrap())
         .map(|e| e.file_name())
         .filter_map(|e| e.into_string().ok())
         .collect::<HashSet<_>>();
     let can_static = libs.iter().all(|l| {
-        files.contains(&format!("lib{}.a", l.as_ref())) ||
-            files.contains(&format!("{}.lib", l.as_ref()))
+        files.contains(&format!("lib{}.a", l.as_ref()))
+            || files.contains(&format!("{}.lib", l.as_ref()))
     });
     let can_dylib = libs.iter().all(|l| {
-        files.contains(&format!("lib{}.so", l.as_ref())) ||
-            files.contains(&format!("{}.dll", l.as_ref())) ||
-            files.contains(&format!("lib{}.dylib", l.as_ref()))
+        files.contains(&format!("lib{}.so", l.as_ref()))
+            || files.contains(&format!("{}.dll", l.as_ref()))
+            || files.contains(&format!("lib{}.dylib", l.as_ref()))
     });
 
     match (can_static, can_dylib) {
@@ -127,7 +126,7 @@ fn determine_mode<T: AsRef<str>>(libdirs: &Vec<PathBuf>, libs: &[T]) -> &'static
         (false, false) => {
             panic!(
                 "OpenCC libdirs at `{:?}` do not contain the required files \
-                    to either statically or dynamically link OpenCC",
+                 to either statically or dynamically link OpenCC",
                 libdirs
             );
         }
@@ -147,11 +146,12 @@ fn run_pkg_config() -> pkg_config::Library {
     if !Command::new("pkg-config")
         .arg(format!("--max-version={}", MAX_VERSION))
         .arg("opencc")
-        .status().unwrap().success() {
+        .status()
+        .unwrap()
+        .success()
+    {
         panic!(format!("OpenCC version must be no higher than {}", MAX_VERSION));
     }
 
-    pkg_config::Config::new()
-        .cargo_metadata(false)
-        .probe("opencc").unwrap()
+    pkg_config::Config::new().cargo_metadata(false).probe("opencc").unwrap()
 }

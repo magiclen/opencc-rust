@@ -84,22 +84,31 @@ extern crate lazy_static;
 #[macro_use]
 extern crate lazy_static_include;
 
-use libc::{c_int, size_t, c_void, c_char};
+use libc::{c_char, c_int, c_void, size_t};
 
 use std::ffi::{CStr, CString};
-use std::mem::transmute;
-use std::path::Path;
 #[cfg(feature = "static-dictionaries")]
 use std::fs::{self, File};
 #[cfg(feature = "static-dictionaries")]
 use std::io::Write;
+use std::mem::transmute;
+use std::path::Path;
 
 #[link(name = "opencc")]
-extern "C" {
+extern {
     pub fn opencc_open(config_file_path: *const c_char) -> *mut c_void;
     pub fn opencc_close(opencc: *mut c_void) -> c_int;
-    pub fn opencc_convert_utf8(opencc: *mut c_void, input: *const c_char, length: size_t) -> *mut c_char;
-    pub fn opencc_convert_utf8_to_buffer(opencc: *mut c_void, input: *const c_char, length: size_t, output: *mut c_char) -> size_t;
+    pub fn opencc_convert_utf8(
+        opencc: *mut c_void,
+        input: *const c_char,
+        length: size_t,
+    ) -> *mut c_char;
+    pub fn opencc_convert_utf8_to_buffer(
+        opencc: *mut c_void,
+        input: *const c_char,
+        length: size_t,
+        output: *mut c_char,
+    ) -> size_t;
     pub fn opencc_convert_utf8_free(str: *mut c_char);
     pub fn opencc_error() -> *const c_char;
 }
@@ -195,7 +204,7 @@ pub enum DefaultConfig {
 
 impl DefaultConfig {
     /// Get the file name for this default config.
-    pub fn get_file_name(&self) -> &'static str {
+    pub fn get_file_name(self) -> &'static str {
         match self {
             DefaultConfig::S2T => "s2t.json",
             DefaultConfig::T2S => "t2s.json",
@@ -235,21 +244,18 @@ unsafe impl Sync for OpenCC {}
 impl OpenCC {
     /// Create a new OpenCC instance through a file provided by its path.
     pub fn new<P: AsRef<Path>>(config_file_path: P) -> Result<OpenCC, &'static str> {
-        let config_file_path = CString::new(config_file_path.as_ref().as_os_str().to_str().unwrap()).unwrap();
+        let config_file_path =
+            CString::new(config_file_path.as_ref().as_os_str().to_str().unwrap()).unwrap();
 
-        let opencc = unsafe {
-            opencc_open(config_file_path.as_ptr())
-        };
+        let opencc = unsafe { opencc_open(config_file_path.as_ptr()) };
 
-        let v: size_t = unsafe {
-            transmute(opencc)
-        };
+        let v: size_t = unsafe { transmute(opencc) };
         if v == !0 {
             return Err("Cannot use this config file path.");
         }
 
         Ok(OpenCC {
-            opencc
+            opencc,
         })
     }
 
@@ -260,12 +266,8 @@ impl OpenCC {
         let length = input.len();
         let input = CString::new(input).unwrap();
 
-        let result_ptr = unsafe {
-            opencc_convert_utf8(self.opencc, input.as_ptr(), length)
-        };
-        let result_cstr = unsafe {
-            CStr::from_ptr(result_ptr)
-        };
+        let result_ptr = unsafe { opencc_convert_utf8(self.opencc, input.as_ptr(), length) };
+        let result_cstr = unsafe { CStr::from_ptr(result_ptr) };
         let result = result_cstr.to_string_lossy().to_string();
 
         unsafe {
@@ -287,9 +289,7 @@ impl OpenCC {
 
         output.reserve(length * 2);
 
-        let input_ptr = unsafe {
-            output.as_ptr().add(output.len()) as *mut c_char
-        };
+        let input_ptr = unsafe { output.as_ptr().add(output.len()) as *mut c_char };
 
         let size = unsafe {
             opencc_convert_utf8_to_buffer(self.opencc, input.as_ptr(), length, input_ptr)
@@ -299,9 +299,7 @@ impl OpenCC {
             output.set_len(o_len + size);
         }
 
-        unsafe {
-            String::from_utf8_unchecked(output)
-        }
+        unsafe { String::from_utf8_unchecked(output) }
     }
 }
 
@@ -316,7 +314,10 @@ impl Drop for OpenCC {
 }
 
 #[cfg(feature = "static-dictionaries")]
-fn generate_static_dictionary_inner<P: AsRef<Path>>(path: P, config: DefaultConfig) -> Result<(), &'static str> {
+fn generate_static_dictionary_inner<P: AsRef<Path>>(
+    path: P,
+    config: DefaultConfig,
+) -> Result<(), &'static str> {
     let path = path.as_ref();
 
     let mut output_data: Vec<&SD> = Vec::new();
@@ -395,7 +396,7 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(path: P, config: DefaultConf
         }
         let mut file = match File::create(output_path) {
             Ok(file) => file,
-            Err(_) => return Err("Cannot create a new file.")
+            Err(_) => return Err("Cannot create a new file."),
         };
 
         if let Err(_) = file.write(data.1) {
@@ -412,7 +413,10 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(path: P, config: DefaultConf
 
 #[cfg(feature = "static-dictionaries")]
 /// Generate files for a specific dictionary. These files are used for opening a new OpenCC instance.
-pub fn generate_static_dictionary<P: AsRef<Path>>(path: P, config: DefaultConfig) -> Result<(), &'static str> {
+pub fn generate_static_dictionary<P: AsRef<Path>>(
+    path: P,
+    config: DefaultConfig,
+) -> Result<(), &'static str> {
     let path = path.as_ref();
 
     if path.exists() {
@@ -422,7 +426,7 @@ pub fn generate_static_dictionary<P: AsRef<Path>>(path: P, config: DefaultConfig
     } else {
         match fs::create_dir_all(path) {
             Ok(_) => (),
-            Err(_) => return Err("Cannot create new directories.")
+            Err(_) => return Err("Cannot create new directories."),
         }
     }
 
@@ -431,7 +435,10 @@ pub fn generate_static_dictionary<P: AsRef<Path>>(path: P, config: DefaultConfig
 
 #[cfg(feature = "static-dictionaries")]
 /// Generate files for specific dictionaries. These files are used for opening a new OpenCC instance.
-pub fn generate_static_dictionaries<P: AsRef<Path>>(path: P, configs: &[DefaultConfig]) -> Result<(), &'static str> {
+pub fn generate_static_dictionaries<P: AsRef<Path>>(
+    path: P,
+    configs: &[DefaultConfig],
+) -> Result<(), &'static str> {
     let path = path.as_ref();
 
     if path.exists() {
@@ -441,7 +448,7 @@ pub fn generate_static_dictionaries<P: AsRef<Path>>(path: P, configs: &[DefaultC
     } else {
         match fs::create_dir_all(path) {
             Ok(_) => (),
-            Err(_) => return Err("Cannot create new directories.")
+            Err(_) => return Err("Cannot create new directories."),
         }
     }
 

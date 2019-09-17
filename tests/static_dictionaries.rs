@@ -5,7 +5,7 @@ extern crate opencc_rust;
 use std::env;
 use std::path::Path;
 
-use opencc_rust::{OpenCC, DefaultConfig};
+use opencc_rust::{DefaultConfig, OpenCC};
 
 #[test]
 fn generate_static_dictionary() {
