@@ -131,15 +131,21 @@ macro_rules! new_sd_instance {
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(HK2S_JSON, "hk2s.json");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(HKVARIANTS_OCD, "HKVariants.ocd");
+new_sd_instance!(HKVARIANTS_OCD, "HKVariants.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(HKVARIANTS_PHRASES_OCD, "HKVariantsPhrases.ocd");
+new_sd_instance!(HKVARIANTS_REV_OCD, "HKVariantsRev.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(HKVARIANTS_REV_OCD, "HKVariantsRev.ocd");
+new_sd_instance!(HKVARIANTS_REV_PHRASES_OCD, "HKVariantsRevPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(HKVARIANTS_REV_PHRASES_OCD, "HKVariantsRevPhrases.ocd");
+new_sd_instance!(JP2T_JSON, "jp2t.json");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(JPVARIANTS_OCD, "JPVariants.ocd");
+new_sd_instance!(JPSHINJITAI_CHARATERS_OCD, "JPShinjitaiCharacters.ocd2");
+#[cfg(feature = "static-dictionaries")]
+new_sd_instance!(JPSHINJITAI_PHRASES_OCD, "JPShinjitaiPhrases.ocd2");
+#[cfg(feature = "static-dictionaries")]
+new_sd_instance!(JPVARIANTS_OCD, "JPVariants.ocd2");
+#[cfg(feature = "static-dictionaries")]
+new_sd_instance!(JPVARIANTS_REV_OCD, "JPVariantsRev.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(S2HK_JSON, "s2hk.json");
 #[cfg(feature = "static-dictionaries")]
@@ -149,33 +155,35 @@ new_sd_instance!(S2TW_JSON, "s2tw.json");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(S2TWP_JSON, "s2twp.json");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(STCHARACTERS_OCD, "STCharacters.ocd");
+new_sd_instance!(STCHARACTERS_OCD, "STCharacters.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(STPHRASES_OCD, "STPhrases.ocd");
+new_sd_instance!(STPHRASES_OCD, "STPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(T2HK_JSON, "t2hk.json");
+#[cfg(feature = "static-dictionaries")]
+new_sd_instance!(T2JP_JSON, "t2jp.json");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(T2S_JSON, "t2s.json");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(T2TW_JSON, "t2tw.json");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(TSCHARACTERS_OCD, "TSCharacters.ocd");
+new_sd_instance!(TSCHARACTERS_OCD, "TSCharacters.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(TSPHRASES_OCD, "TSPhrases.ocd");
+new_sd_instance!(TSPHRASES_OCD, "TSPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TW2S_JSON, "tw2s.json");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TW2SP_JSON, "tw2sp.json");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(TWPHRASES_OCD, "TWPhrases.ocd");
+new_sd_instance!(TWPHRASES_OCD, "TWPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(TWPHRASES_REV_OCD, "TWPhrasesRev.ocd");
+new_sd_instance!(TWPHRASES_REV_OCD, "TWPhrasesRev.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(TWVARIANTS_OCD, "TWVariants.ocd");
+new_sd_instance!(TWVARIANTS_OCD, "TWVariants.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(TWVARIANTS_REV_OCD, "TWVariantsRev.ocd");
+new_sd_instance!(TWVARIANTS_REV_OCD, "TWVariantsRev.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(TWVARIANTS_REV_PHRASES_OCD, "TWVariantsRevPhrases.ocd");
+new_sd_instance!(TWVARIANTS_REV_PHRASES_OCD, "TWVariantsRevPhrases.ocd2");
 
 /// Default configs.
 #[derive(Debug, Copy, Clone)]
@@ -200,6 +208,10 @@ pub enum DefaultConfig {
     T2TW,
     /// Traditional Chinese (OpenCC Standard) to Hong Kong Standard
     T2HK,
+    /// New Japanese Kanji (Shinjitai) to Traditional Chinese Characters (Kyūjitai)
+    JP2T,
+    /// Traditional Chinese Characters (Kyūjitai) to New Japanese Kanji (Shinjitai)
+    T2JP,
 }
 
 impl DefaultConfig {
@@ -216,6 +228,8 @@ impl DefaultConfig {
             DefaultConfig::TW2SP => "tw2sp.json",
             DefaultConfig::T2TW => "t2tw.json",
             DefaultConfig::T2HK => "t2hk.json",
+            DefaultConfig::JP2T => "jp2t.json",
+            DefaultConfig::T2JP => "t2jp.json",
         }
     }
 }
@@ -350,7 +364,6 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&S2HK_JSON);
             output_data.push(&STPHRASES_OCD);
             output_data.push(&STCHARACTERS_OCD);
-            output_data.push(&HKVARIANTS_PHRASES_OCD);
             output_data.push(&HKVARIANTS_OCD);
         }
         DefaultConfig::HK2S => {
@@ -383,10 +396,21 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&T2HK_JSON);
             output_data.push(&HKVARIANTS_OCD);
         }
+        DefaultConfig::JP2T => {
+            output_data.push(&JP2T_JSON);
+            output_data.push(&JPSHINJITAI_CHARATERS_OCD);
+            output_data.push(&JPSHINJITAI_PHRASES_OCD);
+            output_data.push(&JPVARIANTS_REV_OCD);
+        }
+        DefaultConfig::T2JP => {
+            output_data.push(&T2JP_JSON);
+            output_data.push(&JPVARIANTS_OCD);
+        }
     }
 
     for data in output_data {
         let output_path = Path::join(&path, Path::new(data.0));
+
         if output_path.exists() {
             if output_path.is_file() {
                 continue;
@@ -394,18 +418,12 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
                 return Err("The dictionary is not correct.");
             }
         }
-        let mut file = match File::create(output_path) {
-            Ok(file) => file,
-            Err(_) => return Err("Cannot create a new file."),
-        };
 
-        if let Err(_) = file.write(data.1) {
-            return Err("Cannot write data to a file.");
-        }
+        let mut file = File::create(output_path).map_err(|_| "Cannot create a new file.")?;
 
-        if let Err(_) = file.flush() {
-            return Err("Cannot flush file.");
-        }
+        file.write(data.1).map_err(|_| "Cannot write data to a file.")?;
+
+        file.flush().map_err(|_| "Cannot flush file.")?;
     }
 
     Ok(())
@@ -452,8 +470,8 @@ pub fn generate_static_dictionaries<P: AsRef<Path>>(
         }
     }
 
-    for config in configs {
-        generate_static_dictionary_inner(path, config.clone())?
+    for config in configs.iter().copied() {
+        generate_static_dictionary_inner(path, config)?
     }
 
     Ok(())

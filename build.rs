@@ -5,8 +5,8 @@ use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-const MIN_VERSION: &'static str = "1.0.0";
-const MAX_VERSION: &'static str = "1.1.0";
+const MIN_VERSION: &str = "1.1.0";
+const MAX_VERSION: &str = "1.2.0";
 
 fn main() {
     if cfg!(target_os = "freebsd") {
@@ -37,8 +37,9 @@ fn main() {
     let libs_env = env::var("OPENCC_LIBS").ok();
 
     let libs = match libs_env {
-        Some(ref v) => v.split(":").map(|x| x.to_owned()).collect(),
+        Some(ref v) => v.split(':').map(|x| x.to_owned()).collect(),
         None => {
+            #[allow(clippy::if_same_then_else)]
             if target.contains("windows") {
                 vec!["opencc".to_string()] // TODO: not sure
             } else if target.contains("freebsd") {
@@ -72,7 +73,7 @@ fn env_var_set_default(name: &str, value: &str) {
 fn find_opencc_lib_dirs() -> Vec<PathBuf> {
     println!("cargo:rerun-if-env-changed=OPENCC_LIB_DIRS");
     env::var("OPENCC_LIB_DIRS")
-        .map(|x| x.split(":").map(PathBuf::from).collect::<Vec<PathBuf>>())
+        .map(|x| x.split(':').map(PathBuf::from).collect::<Vec<PathBuf>>())
         .or_else(|_| Ok(vec![find_opencc_dir()?.join("lib")]))
         .or_else(|_: env::VarError| -> Result<_, env::VarError> { Ok(run_pkg_config().link_paths) })
         .expect("Couldn't find OpenCC library directory")
@@ -81,7 +82,7 @@ fn find_opencc_lib_dirs() -> Vec<PathBuf> {
 fn find_opencc_include_dirs() -> Vec<PathBuf> {
     println!("cargo:rerun-if-env-changed=OPENCC_INCLUDE_DIRS");
     env::var("OPENCC_INCLUDE_DIRS")
-        .map(|x| x.split(":").map(PathBuf::from).collect::<Vec<PathBuf>>())
+        .map(|x| x.split(':').map(PathBuf::from).collect::<Vec<PathBuf>>())
         .or_else(|_| Ok(vec![find_opencc_dir()?.join("include")]))
         .or_else(|_: env::VarError| -> Result<_, env::VarError> {
             Ok(run_pkg_config().include_paths)
@@ -94,7 +95,7 @@ fn find_opencc_dir() -> Result<PathBuf, env::VarError> {
     env::var("OPENCC_DIR").map(PathBuf::from)
 }
 
-fn determine_mode<T: AsRef<str>>(libdirs: &Vec<PathBuf>, libs: &[T]) -> &'static str {
+fn determine_mode<T: AsRef<str>>(libdirs: &[PathBuf], libs: &[T]) -> &'static str {
     println!("cargo:rerun-if-env-changed=OPENCC_STATIC");
     let kind = env::var("OPENCC_STATIC").ok();
     match kind.as_ref().map(|s| &s[..]) {
@@ -104,7 +105,7 @@ fn determine_mode<T: AsRef<str>>(libdirs: &Vec<PathBuf>, libs: &[T]) -> &'static
     }
 
     let files = libdirs
-        .into_iter()
+        .iter()
         .flat_map(|d| d.read_dir().unwrap())
         .map(|e| e.unwrap())
         .map(|e| e.file_name())
