@@ -76,6 +76,7 @@ assert_eq!("凉风有讯", &opencc.convert("涼風有訊"));
 */
 
 extern crate libc;
+
 #[cfg(feature = "static-dictionaries")]
 #[macro_use]
 extern crate lazy_static;
@@ -83,6 +84,10 @@ extern crate lazy_static;
 #[cfg(feature = "static-dictionaries")]
 #[macro_use]
 extern crate lazy_static_include;
+
+#[cfg(feature = "static-dictionaries")]
+#[macro_use]
+extern crate slash_formatter;
 
 use libc::{c_char, c_int, c_void, size_t};
 
@@ -121,7 +126,10 @@ macro_rules! new_sd_instance {
     ($name:ident, $file_name:expr) => {
         lazy_static! {
             static ref $name: SD = {
-                lazy_static_include_bytes!(RES, concat!("opencc/", $file_name));
+                lazy_static_include_bytes! {
+                    RES => concat_with_file_separator!("opencc", $file_name)
+                }
+
                 SD($file_name, &RES)
             };
         }
