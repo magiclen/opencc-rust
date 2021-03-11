@@ -5,7 +5,7 @@ use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-const MIN_VERSION: &str = "1.1.0";
+const MIN_VERSION: &str = "1.1.2";
 const MAX_VERSION: &str = "1.2.0";
 
 fn main() {

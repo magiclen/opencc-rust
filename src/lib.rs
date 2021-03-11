@@ -138,6 +138,8 @@ macro_rules! new_sd_instance {
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(HK2S_JSON, "hk2s.json");
 #[cfg(feature = "static-dictionaries")]
+new_sd_instance!(HK2T_JSON, "hk2t.json");
+#[cfg(feature = "static-dictionaries")]
 new_sd_instance!(HKVARIANTS_OCD, "HKVariants.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(HKVARIANTS_REV_OCD, "HKVariantsRev.ocd2");
@@ -182,6 +184,8 @@ new_sd_instance!(TW2S_JSON, "tw2s.json");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TW2SP_JSON, "tw2sp.json");
 #[cfg(feature = "static-dictionaries")]
+new_sd_instance!(TW2T_JSON, "tw2t.json");
+#[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TWPHRASES_OCD, "TWPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TWPHRASES_REV_OCD, "TWPhrasesRev.ocd2");
@@ -195,48 +199,54 @@ new_sd_instance!(TWVARIANTS_REV_PHRASES_OCD, "TWVariantsRevPhrases.ocd2");
 /// Default configs.
 #[derive(Debug, Copy, Clone)]
 pub enum DefaultConfig {
-    /// Simplified Chinese to Traditional Chinese
-    S2T,
-    /// Traditional Chinese to Simplified Chinese
-    T2S,
-    /// Simplified Chinese to Traditional Chinese (Taiwan Standard)
-    S2TW,
-    /// Traditional Chinese (Taiwan Standard) to Simplified Chinese
-    TW2S,
-    /// Simplified Chinese to Traditional Chinese (Hong Kong Standard)
-    S2HK,
     /// Traditional Chinese (Hong Kong Standard) to Simplified Chinese
     HK2S,
-    /// Simplified Chinese to Traditional Chinese (Taiwan Standard) with Taiwanese idiom
-    S2TWP,
-    /// Traditional Chinese (Taiwan Standard) to Simplified Chinese with Mainland Chinese idiom
-    TW2SP,
-    /// Traditional Chinese (OpenCC Standard) to Taiwan Standard
-    T2TW,
-    /// Traditional Chinese (OpenCC Standard) to Hong Kong Standard
-    T2HK,
+    /// Traditional Chinese (Hong Kong Standard) to Traditional Chinese
+    HK2T,
     /// New Japanese Kanji (Shinjitai) to Traditional Chinese Characters (Kyūjitai)
     JP2T,
+    /// Simplified Chinese to Traditional Chinese
+    S2T,
+    /// Simplified Chinese to Traditional Chinese (Taiwan Standard)
+    S2TW,
+    /// Simplified Chinese to Traditional Chinese (Taiwan Standard) with Taiwanese idiom
+    S2TWP,
+    /// Traditional Chinese (OpenCC Standard) to Hong Kong Standard
+    T2HK,
     /// Traditional Chinese Characters (Kyūjitai) to New Japanese Kanji (Shinjitai)
     T2JP,
+    /// Traditional Chinese (OpenCC Standard) to Taiwan Standard
+    T2TW,
+    /// Traditional Chinese to Simplified Chinese
+    T2S,
+    /// Simplified Chinese to Traditional Chinese (Hong Kong Standard)
+    S2HK,
+    /// Traditional Chinese (Taiwan Standard) to Simplified Chinese
+    TW2S,
+    /// Traditional Chinese (Taiwan Standard) to Simplified Chinese with Mainland Chinese idiom
+    TW2SP,
+    /// Traditional Chinese (Taiwan Standard) to Traditional Chinese
+    TW2T,
 }
 
 impl DefaultConfig {
     /// Get the file name for this default config.
     pub fn get_file_name(self) -> &'static str {
         match self {
-            DefaultConfig::S2T => "s2t.json",
-            DefaultConfig::T2S => "t2s.json",
-            DefaultConfig::S2TW => "s2tw.json",
-            DefaultConfig::TW2S => "tw2s.json",
-            DefaultConfig::S2HK => "s2hk.json",
             DefaultConfig::HK2S => "hk2s.json",
-            DefaultConfig::S2TWP => "s2twp.json",
-            DefaultConfig::TW2SP => "tw2sp.json",
-            DefaultConfig::T2TW => "t2tw.json",
-            DefaultConfig::T2HK => "t2hk.json",
+            DefaultConfig::HK2T => "hk2t.json",
             DefaultConfig::JP2T => "jp2t.json",
+            DefaultConfig::S2HK => "s2hk.json",
+            DefaultConfig::S2T => "s2t.json",
+            DefaultConfig::S2TW => "s2tw.json",
+            DefaultConfig::S2TWP => "s2twp.json",
+            DefaultConfig::T2HK => "t2hk.json",
             DefaultConfig::T2JP => "t2jp.json",
+            DefaultConfig::T2S => "t2s.json",
+            DefaultConfig::T2TW => "t2tw.json",
+            DefaultConfig::TW2S => "tw2s.json",
+            DefaultConfig::TW2SP => "tw2sp.json",
+            DefaultConfig::TW2T => "tw2t.json",
         }
     }
 }
@@ -344,28 +354,23 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
     let mut output_data: Vec<&SD> = Vec::new();
 
     match config {
-        DefaultConfig::S2T => {
-            output_data.push(&S2T_JSON);
-            output_data.push(&STPHRASES_OCD);
-            output_data.push(&STCHARACTERS_OCD);
-        }
-        DefaultConfig::T2S => {
-            output_data.push(&T2S_JSON);
+        DefaultConfig::HK2S => {
+            output_data.push(&HK2S_JSON);
             output_data.push(&TSPHRASES_OCD);
+            output_data.push(&HKVARIANTS_REV_PHRASES_OCD);
+            output_data.push(&HKVARIANTS_REV_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         }
-        DefaultConfig::S2TW => {
-            output_data.push(&S2TW_JSON);
-            output_data.push(&STPHRASES_OCD);
-            output_data.push(&STCHARACTERS_OCD);
-            output_data.push(&TWVARIANTS_OCD);
+        DefaultConfig::HK2T => {
+            output_data.push(&HK2T_JSON);
+            output_data.push(&HKVARIANTS_REV_PHRASES_OCD);
+            output_data.push(&HKVARIANTS_REV_OCD);
         }
-        DefaultConfig::TW2S => {
-            output_data.push(&TW2S_JSON);
-            output_data.push(&TSPHRASES_OCD);
-            output_data.push(&TSCHARACTERS_OCD);
-            output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
-            output_data.push(&TWVARIANTS_REV_OCD);
+        DefaultConfig::JP2T => {
+            output_data.push(&JP2T_JSON);
+            output_data.push(&JPSHINJITAI_PHRASES_OCD);
+            output_data.push(&JPSHINJITAI_CHARATERS_OCD);
+            output_data.push(&JPVARIANTS_REV_OCD);
         }
         DefaultConfig::S2HK => {
             output_data.push(&S2HK_JSON);
@@ -373,12 +378,16 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&STCHARACTERS_OCD);
             output_data.push(&HKVARIANTS_OCD);
         }
-        DefaultConfig::HK2S => {
-            output_data.push(&HK2S_JSON);
-            output_data.push(&TSPHRASES_OCD);
-            output_data.push(&TSCHARACTERS_OCD);
-            output_data.push(&HKVARIANTS_REV_PHRASES_OCD);
-            output_data.push(&HKVARIANTS_REV_OCD);
+        DefaultConfig::S2T => {
+            output_data.push(&S2T_JSON);
+            output_data.push(&STPHRASES_OCD);
+            output_data.push(&STCHARACTERS_OCD);
+        }
+        DefaultConfig::S2TW => {
+            output_data.push(&S2TW_JSON);
+            output_data.push(&STPHRASES_OCD);
+            output_data.push(&STCHARACTERS_OCD);
+            output_data.push(&TWVARIANTS_OCD);
         }
         DefaultConfig::S2TWP => {
             output_data.push(&S2TWP_JSON);
@@ -387,31 +396,42 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&TWPHRASES_OCD);
             output_data.push(&TWVARIANTS_OCD);
         }
-        DefaultConfig::TW2SP => {
-            output_data.push(&TW2SP_JSON);
+        DefaultConfig::T2HK => {
+            output_data.push(&T2HK_JSON);
+            output_data.push(&HKVARIANTS_OCD);
+        }
+        DefaultConfig::T2JP => {
+            output_data.push(&T2JP_JSON);
+            output_data.push(&JPVARIANTS_OCD);
+        }
+        DefaultConfig::T2S => {
+            output_data.push(&T2S_JSON);
             output_data.push(&TSPHRASES_OCD);
             output_data.push(&TSCHARACTERS_OCD);
-            output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
-            output_data.push(&TWVARIANTS_OCD);
-            output_data.push(&TWPHRASES_REV_OCD);
         }
         DefaultConfig::T2TW => {
             output_data.push(&T2TW_JSON);
             output_data.push(&TWVARIANTS_OCD);
         }
-        DefaultConfig::T2HK => {
-            output_data.push(&T2HK_JSON);
-            output_data.push(&HKVARIANTS_OCD);
+        DefaultConfig::TW2S => {
+            output_data.push(&TW2S_JSON);
+            output_data.push(&TSPHRASES_OCD);
+            output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
+            output_data.push(&TWVARIANTS_REV_OCD);
+            output_data.push(&TSCHARACTERS_OCD);
         }
-        DefaultConfig::JP2T => {
-            output_data.push(&JP2T_JSON);
-            output_data.push(&JPSHINJITAI_CHARATERS_OCD);
-            output_data.push(&JPSHINJITAI_PHRASES_OCD);
-            output_data.push(&JPVARIANTS_REV_OCD);
+        DefaultConfig::TW2SP => {
+            output_data.push(&TW2SP_JSON);
+            output_data.push(&TSPHRASES_OCD);
+            output_data.push(&TWPHRASES_REV_OCD);
+            output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
+            output_data.push(&TWVARIANTS_REV_OCD);
+            output_data.push(&TSCHARACTERS_OCD);
         }
-        DefaultConfig::T2JP => {
-            output_data.push(&T2JP_JSON);
-            output_data.push(&JPVARIANTS_OCD);
+        DefaultConfig::TW2T => {
+            output_data.push(&TW2T_JSON);
+            output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
+            output_data.push(&TWVARIANTS_REV_OCD);
         }
     }
 

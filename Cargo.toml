@@ -1,6 +1,6 @@
 [package]
 name = "opencc-rust"
-version = "1.1.6"
+version = "1.1.7"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2018"
 repository = "https://github.com/magiclen/opencc-rust"
