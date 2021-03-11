@@ -96,7 +96,6 @@ use std::ffi::{CStr, CString};
 use std::fs::{self, File};
 #[cfg(feature = "static-dictionaries")]
 use std::io::Write;
-use std::mem::transmute;
 use std::path::Path;
 
 #[link(name = "opencc")]
@@ -271,7 +270,7 @@ impl OpenCC {
 
         let opencc = unsafe { opencc_open(config_file_path.as_ptr()) };
 
-        let v: size_t = unsafe { transmute(opencc) };
+        let v: size_t = opencc as size_t;
         if v == !0 {
             return Err("Cannot use this config file path.");
         }

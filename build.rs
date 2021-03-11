@@ -151,7 +151,7 @@ fn run_pkg_config() -> pkg_config::Library {
         .unwrap()
         .success()
     {
-        panic!(format!("OpenCC version must be no higher than {}", MAX_VERSION));
+        panic!("OpenCC version must be no higher than {}", MAX_VERSION);
     }
 
     pkg_config::Config::new().cargo_metadata(false).probe("opencc").unwrap()
