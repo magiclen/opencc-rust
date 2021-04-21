@@ -1,7 +1,7 @@
 OpenCC Rust
 ====================
 
-[![Build Status](https://travis-ci.org/magiclen/opencc-rust.svg?branch=master)](https://travis-ci.org/magiclen/opencc-rust)
+[![CI](https://github.com/magiclen/opencc-rust/actions/workflows/ci.yml/badge.svg)](https://github.com/magiclen/opencc-rust/actions/workflows/ci.yml)
 
 Open Chinese Convert(OpenCC, 開放中文轉換) binding for the Rust language for conversion between Traditional Chinese and Simplified Chinese.
 

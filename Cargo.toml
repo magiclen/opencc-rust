@@ -12,10 +12,6 @@ readme = "README.md"
 license = "Apache-2.0"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE", "build.rs", "opencc/**/*"]
 
-[badges.travis-ci]
-repository = "magiclen/opencc-rust"
-branch = "master"
-
 [dependencies]
 libc = "0.2.43"
 lazy-static-include = { version = "3", optional = true }

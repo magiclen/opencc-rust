@@ -1,0 +1,73 @@
+name: CI
+
+on: [ push, pull_request ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: rustfmt
+      - run: cargo fmt -- --check
+
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install OpenCC
+        run: |
+          sudo apt update
+          sudo apt install doxygen cmake
+          git clone https://github.com/BYVoid/OpenCC.git
+          cd OpenCC
+          make PREFIX=/usr
+          sudo make PREFIX=/usr install
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: clippy
+      - run: cargo clippy -- -D warnings
+
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        toolchain:
+          - stable
+          - nightly
+    name: Test ${{ matrix.toolchain }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install OpenCC
+        run: |
+          sudo apt update
+          sudo apt install doxygen cmake
+          git clone https://github.com/BYVoid/OpenCC.git
+          cd OpenCC
+          make PREFIX=/usr
+          sudo make PREFIX=/usr install
+      - run: sudo ldconfig
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.toolchain }}
+          override: true
+      - run: cargo build
+      - run: cargo test
+      - run: cargo doc
+      - run: cargo build --features static-dictionaries
+      - run: cargo test --features static-dictionaries
+      - run: cargo doc --features static-dictionaries

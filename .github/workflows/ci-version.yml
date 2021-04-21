@@ -1,0 +1,44 @@
+name: CI-version
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        toolchain:
+          - stable
+          - nightly
+    name: Test ${{ matrix.toolchain }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install OpenCC
+        run: |
+          sudo apt update
+          sudo apt install doxygen cmake
+          git clone https://github.com/BYVoid/OpenCC.git
+          cd OpenCC
+          make PREFIX=/usr
+          sudo make PREFIX=/usr install
+      - run: sudo ldconfig
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.toolchain }}
+          override: true
+      - run: cargo build --release
+      - run: cargo test --release
+      - run: cargo doc --release
+      - run: cargo build --release --features static-dictionaries
+      - run: cargo test --release --features static-dictionaries
+      - run: cargo doc --release --features static-dictionaries
