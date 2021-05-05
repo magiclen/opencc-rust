@@ -85,10 +85,6 @@ extern crate lazy_static;
 #[macro_use]
 extern crate lazy_static_include;
 
-#[cfg(feature = "static-dictionaries")]
-#[macro_use]
-extern crate slash_formatter;
-
 use libc::{c_char, c_int, c_void, size_t};
 
 use std::ffi::{CStr, CString};
@@ -126,7 +122,7 @@ macro_rules! new_sd_instance {
         lazy_static! {
             static ref $name: SD = {
                 lazy_static_include_bytes! {
-                    RES => concat_with_file_separator!("opencc", $file_name)
+                    RES => ("opencc", $file_name)
                 }
 
                 SD($file_name, &RES)
