@@ -1,5 +1,3 @@
-extern crate opencc_rust;
-
 use opencc_rust::{DefaultConfig, OpenCC};
 
 #[test]

@@ -1,7 +1,5 @@
 #![cfg(feature = "static-dictionaries")]
 
-extern crate opencc_rust;
-
 use std::env;
 use std::path::Path;
 

@@ -1,5 +1,3 @@
-extern crate pkg_config;
-
 use std::collections::HashSet;
 use std::env;
 use std::path::PathBuf;

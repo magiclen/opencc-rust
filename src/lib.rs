@@ -14,8 +14,6 @@ To compile this crate, you need to compile the OpenCC C++ library first. You can
 ## Examples
 
 ```rust
-extern crate opencc_rust;
-
 use opencc_rust::*;
 
 let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
@@ -30,8 +28,6 @@ assert_eq!("凉风有讯，秋月无边", &s);
 ```
 
 ```rust
-extern crate opencc_rust;
-
 use opencc_rust::*;
 
 let opencc = OpenCC::new(DefaultConfig::S2TWP).unwrap();
@@ -61,8 +57,6 @@ The default OpenCC dictionaries will be compiled into the binary file by `lazy_s
 For example,
 
 ```rust,ignore
-extern crate opencc_rust;
-
 use opencc_rust::*;
 
 let output_path = "/path/to/dictionaries-directory";
@@ -74,8 +68,6 @@ let opencc = OpenCC::new(Path::join(&output_path, DefaultConfig::TW2SP)).unwrap(
 assert_eq!("凉风有讯", &opencc.convert("涼風有訊"));
 ```
 */
-
-extern crate libc;
 
 #[cfg(feature = "static-dictionaries")]
 #[macro_use]
@@ -432,7 +424,7 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
     }
 
     for data in output_data {
-        let output_path = Path::join(&path, Path::new(data.0));
+        let output_path = path.join(data.0);
 
         if output_path.exists() {
             if output_path.is_file() {
