@@ -24,10 +24,11 @@ jobs:
       - name: Install OpenCC
         run: |
           sudo apt update
-          sudo apt install doxygen cmake
-          git clone https://github.com/BYVoid/OpenCC.git
-          cd OpenCC
-          make PREFIX=/usr
+          sudo apt install doxygen cmake wget
+          wget https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.1.1.3.tar.gz
+          tar xf ver.1.1.3.tar.gz
+          cd OpenCC-*
+          make -j$(nproc) PREFIX=/usr
           sudo make PREFIX=/usr install
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -53,10 +54,11 @@ jobs:
       - name: Install OpenCC
         run: |
           sudo apt update
-          sudo apt install doxygen cmake
-          git clone https://github.com/BYVoid/OpenCC.git
-          cd OpenCC
-          make PREFIX=/usr
+          sudo apt install doxygen cmake wget
+          wget https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.1.1.3.tar.gz
+          tar xf ver.1.1.3.tar.gz
+          cd OpenCC-*
+          make -j$(nproc) PREFIX=/usr
           sudo make PREFIX=/usr install
       - run: sudo ldconfig
       - uses: actions/checkout@v2
