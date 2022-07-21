@@ -60,6 +60,14 @@ fn main() {
         Ok(_) => println!("cargo:rustc-link-lib=dylib=stdc++"),
         Err(_) => (),
     }
+
+    println!("cargo:rerun-if-env-changed=OPENCC_STATIC_STDCPP");
+    let kind = env::var("OPENCC_STATIC_STDCPP");
+    match kind.as_ref().map(|s| &s[..]) {
+        Ok("0") => (),
+        Ok(_) => println!("cargo:rustc-link-lib=static=stdc++"),
+        Err(_) => (),
+    }
 }
 
 fn env_var_set_default(name: &str, value: &str) {
