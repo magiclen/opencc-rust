@@ -77,17 +77,19 @@ extern crate lazy_static;
 #[macro_use]
 extern crate lazy_static_include;
 
-use libc::{c_char, c_int, c_void, size_t};
-
-use std::ffi::{CStr, CString};
 #[cfg(feature = "static-dictionaries")]
 use std::fs::{self, File};
 #[cfg(feature = "static-dictionaries")]
 use std::io::Write;
-use std::path::Path;
+use std::{
+    ffi::{CStr, CString},
+    path::Path,
+};
+
+use libc::{c_char, c_int, c_void, size_t};
 
 #[link(name = "opencc")]
-extern {
+extern "C" {
     pub fn opencc_open(config_file_path: *const c_char) -> *mut c_void;
     pub fn opencc_close(opencc: *mut c_void) -> c_int;
     pub fn opencc_convert_utf8(
@@ -348,66 +350,66 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&HKVARIANTS_REV_PHRASES_OCD);
             output_data.push(&HKVARIANTS_REV_OCD);
             output_data.push(&TSCHARACTERS_OCD);
-        }
+        },
         DefaultConfig::HK2T => {
             output_data.push(&HK2T_JSON);
             output_data.push(&HKVARIANTS_REV_PHRASES_OCD);
             output_data.push(&HKVARIANTS_REV_OCD);
-        }
+        },
         DefaultConfig::JP2T => {
             output_data.push(&JP2T_JSON);
             output_data.push(&JPSHINJITAI_PHRASES_OCD);
             output_data.push(&JPSHINJITAI_CHARATERS_OCD);
             output_data.push(&JPVARIANTS_REV_OCD);
-        }
+        },
         DefaultConfig::S2HK => {
             output_data.push(&S2HK_JSON);
             output_data.push(&STPHRASES_OCD);
             output_data.push(&STCHARACTERS_OCD);
             output_data.push(&HKVARIANTS_OCD);
-        }
+        },
         DefaultConfig::S2T => {
             output_data.push(&S2T_JSON);
             output_data.push(&STPHRASES_OCD);
             output_data.push(&STCHARACTERS_OCD);
-        }
+        },
         DefaultConfig::S2TW => {
             output_data.push(&S2TW_JSON);
             output_data.push(&STPHRASES_OCD);
             output_data.push(&STCHARACTERS_OCD);
             output_data.push(&TWVARIANTS_OCD);
-        }
+        },
         DefaultConfig::S2TWP => {
             output_data.push(&S2TWP_JSON);
             output_data.push(&STPHRASES_OCD);
             output_data.push(&STCHARACTERS_OCD);
             output_data.push(&TWPHRASES_OCD);
             output_data.push(&TWVARIANTS_OCD);
-        }
+        },
         DefaultConfig::T2HK => {
             output_data.push(&T2HK_JSON);
             output_data.push(&HKVARIANTS_OCD);
-        }
+        },
         DefaultConfig::T2JP => {
             output_data.push(&T2JP_JSON);
             output_data.push(&JPVARIANTS_OCD);
-        }
+        },
         DefaultConfig::T2S => {
             output_data.push(&T2S_JSON);
             output_data.push(&TSPHRASES_OCD);
             output_data.push(&TSCHARACTERS_OCD);
-        }
+        },
         DefaultConfig::T2TW => {
             output_data.push(&T2TW_JSON);
             output_data.push(&TWVARIANTS_OCD);
-        }
+        },
         DefaultConfig::TW2S => {
             output_data.push(&TW2S_JSON);
             output_data.push(&TSPHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
             output_data.push(&TSCHARACTERS_OCD);
-        }
+        },
         DefaultConfig::TW2SP => {
             output_data.push(&TW2SP_JSON);
             output_data.push(&TSPHRASES_OCD);
@@ -415,12 +417,12 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
             output_data.push(&TSCHARACTERS_OCD);
-        }
+        },
         DefaultConfig::TW2T => {
             output_data.push(&TW2T_JSON);
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
-        }
+        },
     }
 
     for data in output_data {

@@ -1,7 +1,6 @@
 #![cfg(feature = "static-dictionaries")]
 
-use std::env;
-use std::path::Path;
+use std::{env, path::Path};
 
 use opencc_rust::{DefaultConfig, OpenCC};
 

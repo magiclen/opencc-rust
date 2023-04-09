@@ -1,8 +1,9 @@
 [package]
 name = "opencc-rust"
-version = "1.1.14"
+version = "1.1.15"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
+rust-version = "1.56"
 repository = "https://github.com/magiclen/opencc-rust"
 homepage = "https://magiclen.org/opencc-rust"
 keywords = ["chinese", "opencc", "traditional", "simple"]

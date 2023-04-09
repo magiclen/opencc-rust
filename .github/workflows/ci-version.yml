@@ -16,9 +16,13 @@ jobs:
         os:
           - ubuntu-latest
         toolchain:
+          - 1.56
           - stable
           - nightly
-    name: Test ${{ matrix.toolchain }} on ${{ matrix.os }}
+        features:
+          -
+          - --features static-dictionaries
+    name: Test ${{ matrix.toolchain }} on ${{ matrix.os }} (${{ matrix.features }})
     runs-on: ${{ matrix.os }}
     steps:
       - name: Install OpenCC
@@ -31,15 +35,9 @@ jobs:
           make -j$(nproc) PREFIX=/usr
           sudo make PREFIX=/usr install
       - run: sudo ldconfig
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           toolchain: ${{ matrix.toolchain }}
-          override: true
-      - run: cargo build --release
-      - run: cargo test --release
-      - run: cargo doc --release
-      - run: cargo build --release --features static-dictionaries
-      - run: cargo test --release --features static-dictionaries
-      - run: cargo doc --release --features static-dictionaries
+      - run: cargo test --release ${{ matrix.features }}
+      - run: cargo doc --release ${{ matrix.features }}
