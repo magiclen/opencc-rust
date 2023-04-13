@@ -9,7 +9,6 @@ homepage = "https://magiclen.org/opencc-rust"
 keywords = ["chinese", "opencc", "traditional", "simple"]
 categories = ["external-ffi-bindings", "localization"]
 description = "Open Chinese Convert(OpenCC, 開放中文轉換) binding for the Rust language for conversion between Traditional Chinese and Simplified Chinese."
-readme = "README.md"
 license = "Apache-2.0"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE", "build.rs", "opencc/**/*"]
 
