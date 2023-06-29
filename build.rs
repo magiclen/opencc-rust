@@ -4,6 +4,10 @@ const MIN_VERSION: &str = "1.1.2";
 const MAX_VERSION: &str = "1.2.0";
 
 fn main() {
+    if env::var("DOCS_RS").is_ok() {
+        return;
+    }
+
     if cfg!(target_os = "freebsd") {
         env_var_set_default("OPENCC_INCLUDE_DIRS", "/usr/include/opencc");
         env_var_set_default("OPENCC_LIB_DIRS", "/usr/lib");
