@@ -9,7 +9,7 @@ jobs:
   rustfmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: nightly
@@ -28,7 +28,7 @@ jobs:
           cd OpenCC-*
           make -j$(nproc) PREFIX=/usr
           sudo make PREFIX=/usr install
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy
@@ -60,7 +60,7 @@ jobs:
           make -j$(nproc) PREFIX=/usr
           sudo make PREFIX=/usr install
       - run: sudo ldconfig
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
