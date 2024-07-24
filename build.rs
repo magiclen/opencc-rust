@@ -79,8 +79,9 @@ fn env_var_set_default(name: &str, value: &str) {
 
 fn find_opencc_lib_dirs() -> Vec<PathBuf> {
     println!("cargo:rerun-if-env-changed=OPENCC_LIB_DIRS");
+    let sep = if cfg!(target_os = "windows") { ";" } else { ":" };
     env::var("OPENCC_LIB_DIRS")
-        .map(|x| x.split(':').map(PathBuf::from).collect::<Vec<PathBuf>>())
+        .map(|x| x.split(sep).map(PathBuf::from).collect::<Vec<PathBuf>>())
         .or_else(|_| Ok(vec![find_opencc_dir()?.join("lib")]))
         .or_else(|_: env::VarError| -> Result<_, env::VarError> { Ok(run_pkg_config().link_paths) })
         .expect("Couldn't find OpenCC library directory")
@@ -88,8 +89,9 @@ fn find_opencc_lib_dirs() -> Vec<PathBuf> {
 
 fn find_opencc_include_dirs() -> Vec<PathBuf> {
     println!("cargo:rerun-if-env-changed=OPENCC_INCLUDE_DIRS");
+    let sep = if cfg!(target_os = "windows") { ";" } else { ":" };
     env::var("OPENCC_INCLUDE_DIRS")
-        .map(|x| x.split(':').map(PathBuf::from).collect::<Vec<PathBuf>>())
+        .map(|x| x.split(sep).map(PathBuf::from).collect::<Vec<PathBuf>>())
         .or_else(|_| Ok(vec![find_opencc_dir()?.join("include")]))
         .or_else(|_: env::VarError| -> Result<_, env::VarError> {
             Ok(run_pkg_config().include_paths)
