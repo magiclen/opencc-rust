@@ -73,7 +73,7 @@ jobs:
         os:
           - ubuntu-latest
         toolchain:
-          - "1.60"
+          - "1.61"
         features:
           -
           - --features static-dictionaries
