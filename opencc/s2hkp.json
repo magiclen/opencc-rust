@@ -1,5 +1,5 @@
 {
-  "name": "Simplified Chinese to Traditional Chinese (Hong Kong variant)",
+  "name": "Simplified Chinese to Traditional Chinese (Hong Kong variant, with phrases)",
   "normalization": [
     { "dict": { "type": "ocd2", "file": "CJK_Compatibility_Ideographs.ocd2" } }
   ],
@@ -37,6 +37,7 @@
         "type": "group",
         "match_policy": "short_circuit",
         "dicts": [
+          { "type": "ocd2", "file": "HKPhrases.ocd2" },
           { "type": "ocd2", "file": "HKVariantsPhrases.ocd2" },
           { "type": "ocd2", "file": "HKVariants.ocd2" }
         ]

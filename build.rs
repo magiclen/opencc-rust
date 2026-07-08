@@ -1,7 +1,7 @@
 use std::{collections::HashSet, env, path::PathBuf, process::Command};
 
-const MIN_VERSION: &str = "1.1.2";
-const MAX_VERSION: &str = "1.2.0";
+const MIN_VERSION: &str = "1.4.0";
+const MAX_VERSION: &str = "1.5.0";
 
 fn main() {
     if env::var("DOCS_RS").is_ok() {
@@ -73,7 +73,9 @@ fn main() {
 
 fn env_var_set_default(name: &str, value: &str) {
     if env::var(name).is_err() {
-        env::set_var(name, value);
+        unsafe {
+            env::set_var(name, value);
+        }
     }
 }
 

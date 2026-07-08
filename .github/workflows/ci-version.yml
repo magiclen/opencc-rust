@@ -28,13 +28,13 @@ jobs:
         run: |
           sudo apt update
           sudo apt install doxygen cmake wget
-          wget https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.1.1.9.tar.gz
-          tar xf ver.1.1.9.tar.gz
+          wget https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.1.4.0.tar.gz
+          tar xf ver.1.4.0.tar.gz
           cd OpenCC-*
           make -j$(nproc) PREFIX=/usr
           sudo make PREFIX=/usr install
       - run: sudo ldconfig
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
@@ -59,13 +59,13 @@ jobs:
         run: |
           sudo apt update
           sudo apt install doxygen cmake wget
-          wget https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.1.1.9.tar.gz
-          tar xf ver.1.1.9.tar.gz
+          wget https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.1.4.0.tar.gz
+          tar xf ver.1.4.0.tar.gz
           cd OpenCC-*
           make -j$(nproc) PREFIX=/usr
           sudo make PREFIX=/usr install
       - run: sudo ldconfig
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}

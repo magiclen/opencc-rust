@@ -69,9 +69,7 @@ assert_eq!("凉风有讯", &opencc.convert("涼風有訊"));
 ```
 */
 
-#[cfg(feature = "static-dictionaries")]
-#[macro_use]
-extern crate lazy_static;
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[cfg(feature = "static-dictionaries")]
 #[macro_use]
@@ -81,6 +79,8 @@ extern crate lazy_static_include;
 use std::fs::{self, File};
 #[cfg(feature = "static-dictionaries")]
 use std::io::Write;
+#[cfg(feature = "static-dictionaries")]
+use std::sync::LazyLock;
 use std::{
     ffi::{CStr, CString},
     path::Path,
@@ -89,7 +89,7 @@ use std::{
 use libc::{c_char, c_int, c_void, size_t};
 
 #[link(name = "opencc")]
-extern "C" {
+unsafe extern "C" {
     pub fn opencc_open(config_file_path: *const c_char) -> *mut c_void;
     pub fn opencc_close(opencc: *mut c_void) -> c_int;
     pub fn opencc_convert_utf8(
@@ -113,24 +113,32 @@ struct SD(&'static str, &'static [u8]);
 #[cfg(feature = "static-dictionaries")]
 macro_rules! new_sd_instance {
     ($name:ident, $file_name:expr) => {
-        lazy_static! {
-            static ref $name: SD = {
-                lazy_static_include_bytes! {
-                    RES => ("opencc", $file_name)
-                }
+        static $name: LazyLock<SD> = LazyLock::new(|| {
+            lazy_static_include_bytes! {
+                RES => ("opencc", $file_name)
+            }
 
-                SD($file_name, &RES)
-            };
-        }
+            SD($file_name, &RES)
+        });
     };
 }
 
 #[cfg(feature = "static-dictionaries")]
+new_sd_instance!(CJK_COMPATIBILITY_IDEOGRAPHS_OCD, "CJK_Compatibility_Ideographs.ocd2");
+#[cfg(feature = "static-dictionaries")]
 new_sd_instance!(HK2S_JSON, "hk2s.json");
+#[cfg(feature = "static-dictionaries")]
+new_sd_instance!(HK2SP_JSON, "hk2sp.json");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(HK2T_JSON, "hk2t.json");
 #[cfg(feature = "static-dictionaries")]
+new_sd_instance!(HKPHRASES_OCD, "HKPhrases.ocd2");
+#[cfg(feature = "static-dictionaries")]
+new_sd_instance!(HKPHRASES_REV_OCD, "HKPhrasesRev.ocd2");
+#[cfg(feature = "static-dictionaries")]
 new_sd_instance!(HKVARIANTS_OCD, "HKVariants.ocd2");
+#[cfg(feature = "static-dictionaries")]
+new_sd_instance!(HKVARIANTS_PHRASES_OCD, "HKVariantsPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(HKVARIANTS_REV_OCD, "HKVariantsRev.ocd2");
 #[cfg(feature = "static-dictionaries")]
@@ -140,13 +148,13 @@ new_sd_instance!(JP2T_JSON, "jp2t.json");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(JPSHINJITAI_CHARATERS_OCD, "JPShinjitaiCharacters.ocd2");
 #[cfg(feature = "static-dictionaries")]
+new_sd_instance!(JPSHINJITAI_CHARATERS_REV_OCD, "JPShinjitaiCharactersRev.ocd2");
+#[cfg(feature = "static-dictionaries")]
 new_sd_instance!(JPSHINJITAI_PHRASES_OCD, "JPShinjitaiPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(JPVARIANTS_OCD, "JPVariants.ocd2");
-#[cfg(feature = "static-dictionaries")]
-new_sd_instance!(JPVARIANTS_REV_OCD, "JPVariantsRev.ocd2");
-#[cfg(feature = "static-dictionaries")]
 new_sd_instance!(S2HK_JSON, "s2hk.json");
+#[cfg(feature = "static-dictionaries")]
+new_sd_instance!(S2HKP_JSON, "s2hkp.json");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(S2T_JSON, "s2t.json");
 #[cfg(feature = "static-dictionaries")]
@@ -155,6 +163,11 @@ new_sd_instance!(S2TW_JSON, "s2tw.json");
 new_sd_instance!(S2TWP_JSON, "s2twp.json");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(STCHARACTERS_OCD, "STCharacters.ocd2");
+#[cfg(feature = "static-dictionaries")]
+new_sd_instance!(
+    STPHRASES_GENERATED_FROM_REGIONAL_PHRASES_OCD,
+    "STPhrases_GeneratedFromRegionalPhrases.ocd2"
+);
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(STPHRASES_OCD, "STPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
@@ -167,6 +180,8 @@ new_sd_instance!(T2S_JSON, "t2s.json");
 new_sd_instance!(T2TW_JSON, "t2tw.json");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TSCHARACTERS_OCD, "TSCharacters.ocd2");
+#[cfg(feature = "static-dictionaries")]
+new_sd_instance!(TSCHARACTERS_EXT_OCD, "TSCharactersExt.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TSPHRASES_OCD, "TSPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
@@ -182,6 +197,8 @@ new_sd_instance!(TWPHRASES_REV_OCD, "TWPhrasesRev.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TWVARIANTS_OCD, "TWVariants.ocd2");
 #[cfg(feature = "static-dictionaries")]
+new_sd_instance!(TWVARIANTS_PHRASES_OCD, "TWVariantsPhrases.ocd2");
+#[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TWVARIANTS_REV_OCD, "TWVariantsRev.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(TWVARIANTS_REV_PHRASES_OCD, "TWVariantsRevPhrases.ocd2");
@@ -189,33 +206,37 @@ new_sd_instance!(TWVARIANTS_REV_PHRASES_OCD, "TWVariantsRevPhrases.ocd2");
 /// Default configs.
 #[derive(Debug, Copy, Clone)]
 pub enum DefaultConfig {
-    /// Traditional Chinese (Hong Kong Standard) to Simplified Chinese
+    /// Traditional Chinese (Hong Kong variant) to Simplified Chinese
     HK2S,
-    /// Traditional Chinese (Hong Kong Standard) to Traditional Chinese
+    /// Traditional Chinese (Hong Kong variant) to Simplified Chinese (with phrases)
+    HK2SP,
+    /// Traditional Chinese (Hong Kong variant) to Traditional Chinese (OpenCC Standard)
     HK2T,
-    /// New Japanese Kanji (Shinjitai) to Traditional Chinese Characters (Kyūjitai)
+    /// New Japanese Kanji (Shinjitai) to Old Japanese Kanji (Kyūjitai)
     JP2T,
-    /// Simplified Chinese to Traditional Chinese
+    /// Simplified Chinese to Traditional Chinese (Hong Kong variant)
+    S2HK,
+    /// Simplified Chinese to Traditional Chinese (Hong Kong variant, with phrases)
+    S2HKP,
+    /// Simplified Chinese to Traditional Chinese (OpenCC Standard)
     S2T,
     /// Simplified Chinese to Traditional Chinese (Taiwan Standard)
     S2TW,
-    /// Simplified Chinese to Traditional Chinese (Taiwan Standard) with Taiwanese idiom
+    /// Simplified Chinese to Traditional Chinese (Taiwan Standard, with Taiwan Phrases)
     S2TWP,
-    /// Traditional Chinese (OpenCC Standard) to Hong Kong Standard
+    /// Traditional Chinese (OpenCC Standard) to Traditional Chinese (Hong Kong variant)
     T2HK,
-    /// Traditional Chinese Characters (Kyūjitai) to New Japanese Kanji (Shinjitai)
+    /// Old Japanese Kanji (Kyūjitai) to New Japanese Kanji (Shinjitai)
     T2JP,
-    /// Traditional Chinese (OpenCC Standard) to Taiwan Standard
-    T2TW,
-    /// Traditional Chinese to Simplified Chinese
+    /// Traditional Chinese (OpenCC Standard) to Simplified Chinese
     T2S,
-    /// Simplified Chinese to Traditional Chinese (Hong Kong Standard)
-    S2HK,
+    /// Traditional Chinese (OpenCC Standard) to Traditional Chinese (Taiwan Standard)
+    T2TW,
     /// Traditional Chinese (Taiwan Standard) to Simplified Chinese
     TW2S,
-    /// Traditional Chinese (Taiwan Standard) to Simplified Chinese with Mainland Chinese idiom
+    /// Traditional Chinese (Taiwan Standard) to Simplified Chinese (Mainland China Phrases)
     TW2SP,
-    /// Traditional Chinese (Taiwan Standard) to Traditional Chinese
+    /// Traditional Chinese (Taiwan Standard) to Traditional Chinese (OpenCC Standard)
     TW2T,
 }
 
@@ -224,9 +245,11 @@ impl DefaultConfig {
     pub fn get_file_name(self) -> &'static str {
         match self {
             DefaultConfig::HK2S => "hk2s.json",
+            DefaultConfig::HK2SP => "hk2sp.json",
             DefaultConfig::HK2T => "hk2t.json",
             DefaultConfig::JP2T => "jp2t.json",
             DefaultConfig::S2HK => "s2hk.json",
+            DefaultConfig::S2HKP => "s2hkp.json",
             DefaultConfig::S2T => "s2t.json",
             DefaultConfig::S2TW => "s2tw.json",
             DefaultConfig::S2TWP => "s2twp.json",
@@ -346,80 +369,127 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
     match config {
         DefaultConfig::HK2S => {
             output_data.push(&HK2S_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&TSPHRASES_OCD);
             output_data.push(&HKVARIANTS_REV_PHRASES_OCD);
             output_data.push(&HKVARIANTS_REV_OCD);
+            output_data.push(&TSPHRASES_OCD);
+            output_data.push(&TSCHARACTERS_EXT_OCD);
+            output_data.push(&TSCHARACTERS_OCD);
+        },
+        DefaultConfig::HK2SP => {
+            output_data.push(&HK2SP_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
+            output_data.push(&TSPHRASES_OCD);
+            output_data.push(&HKPHRASES_REV_OCD);
+            output_data.push(&HKVARIANTS_REV_PHRASES_OCD);
+            output_data.push(&HKVARIANTS_REV_OCD);
+            output_data.push(&TSPHRASES_OCD);
+            output_data.push(&TSCHARACTERS_EXT_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
         DefaultConfig::HK2T => {
             output_data.push(&HK2T_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&HKVARIANTS_REV_PHRASES_OCD);
             output_data.push(&HKVARIANTS_REV_OCD);
         },
         DefaultConfig::JP2T => {
             output_data.push(&JP2T_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&JPSHINJITAI_PHRASES_OCD);
             output_data.push(&JPSHINJITAI_CHARATERS_OCD);
-            output_data.push(&JPVARIANTS_REV_OCD);
         },
         DefaultConfig::S2HK => {
             output_data.push(&S2HK_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&STPHRASES_OCD);
+            output_data.push(&STPHRASES_GENERATED_FROM_REGIONAL_PHRASES_OCD);
             output_data.push(&STCHARACTERS_OCD);
+            output_data.push(&HKVARIANTS_PHRASES_OCD);
+            output_data.push(&HKVARIANTS_OCD);
+        },
+        DefaultConfig::S2HKP => {
+            output_data.push(&S2HKP_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
+            output_data.push(&STPHRASES_OCD);
+            output_data.push(&STPHRASES_GENERATED_FROM_REGIONAL_PHRASES_OCD);
+            output_data.push(&STCHARACTERS_OCD);
+            output_data.push(&HKPHRASES_OCD);
+            output_data.push(&HKVARIANTS_PHRASES_OCD);
             output_data.push(&HKVARIANTS_OCD);
         },
         DefaultConfig::S2T => {
             output_data.push(&S2T_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&STPHRASES_OCD);
+            output_data.push(&STPHRASES_GENERATED_FROM_REGIONAL_PHRASES_OCD);
             output_data.push(&STCHARACTERS_OCD);
         },
         DefaultConfig::S2TW => {
             output_data.push(&S2TW_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&STPHRASES_OCD);
+            output_data.push(&STPHRASES_GENERATED_FROM_REGIONAL_PHRASES_OCD);
             output_data.push(&STCHARACTERS_OCD);
+            output_data.push(&TWVARIANTS_PHRASES_OCD);
             output_data.push(&TWVARIANTS_OCD);
         },
         DefaultConfig::S2TWP => {
             output_data.push(&S2TWP_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&STPHRASES_OCD);
+            output_data.push(&STPHRASES_GENERATED_FROM_REGIONAL_PHRASES_OCD);
             output_data.push(&STCHARACTERS_OCD);
             output_data.push(&TWPHRASES_OCD);
+            output_data.push(&TWVARIANTS_PHRASES_OCD);
             output_data.push(&TWVARIANTS_OCD);
         },
         DefaultConfig::T2HK => {
             output_data.push(&T2HK_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
+            output_data.push(&HKVARIANTS_PHRASES_OCD);
             output_data.push(&HKVARIANTS_OCD);
         },
         DefaultConfig::T2JP => {
             output_data.push(&T2JP_JSON);
-            output_data.push(&JPVARIANTS_OCD);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
+            output_data.push(&JPSHINJITAI_CHARATERS_REV_OCD);
         },
         DefaultConfig::T2S => {
             output_data.push(&T2S_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&TSPHRASES_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
         DefaultConfig::T2TW => {
             output_data.push(&T2TW_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
+            output_data.push(&TWVARIANTS_PHRASES_OCD);
             output_data.push(&TWVARIANTS_OCD);
         },
         DefaultConfig::TW2S => {
             output_data.push(&TW2S_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&TSPHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
+            output_data.push(&TSPHRASES_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
         DefaultConfig::TW2SP => {
             output_data.push(&TW2SP_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&TSPHRASES_OCD);
             output_data.push(&TWPHRASES_REV_OCD);
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
+            output_data.push(&TSPHRASES_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
         DefaultConfig::TW2T => {
             output_data.push(&TW2T_JSON);
+            output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
         },

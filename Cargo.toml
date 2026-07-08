@@ -1,9 +1,9 @@
 [package]
 name = "opencc-rust"
-version = "1.1.19"
+version = "2.0.0"
 authors = ["Magic Len <len@magiclen.org>"]
-edition = "2021"
-rust-version = "1.61"
+edition = "2024"
+rust-version = "1.85"
 repository = "https://github.com/magiclen/opencc-rust"
 homepage = "https://magiclen.org/opencc-rust"
 keywords = ["chinese", "opencc", "traditional", "simple"]
@@ -13,15 +13,14 @@ license = "Apache-2.0"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE", "build.rs", "opencc/**/*"]
 
 [dependencies]
-libc = "0.2.43"
-lazy-static-include = { version = "3.1.1", optional = true }
-lazy_static = { version = "1.4", optional = true }
+libc = "0.2"
+lazy-static-include = { version = "4", optional = true }
 
 [build-dependencies]
 pkg-config = "0.3.14"
 
 [features]
-static-dictionaries = ["lazy-static-include", "lazy_static"]
+static-dictionaries = ["dep:lazy-static-include"]
 
 [package.metadata.docs.rs]
 all-features = true
