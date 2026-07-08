@@ -48,7 +48,7 @@ jobs:
         os:
           - ubuntu-latest
         toolchain:
-          - "1.61"
+          - "1.89"
         features:
           -
           - --features static-dictionaries

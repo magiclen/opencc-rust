@@ -86,6 +86,7 @@ use std::{
     path::Path,
 };
 
+use enum_ordinalize::Ordinalize;
 use libc::{c_char, c_int, c_void, size_t};
 
 #[link(name = "opencc")]
@@ -146,9 +147,9 @@ new_sd_instance!(HKVARIANTS_REV_PHRASES_OCD, "HKVariantsRevPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(JP2T_JSON, "jp2t.json");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(JPSHINJITAI_CHARATERS_OCD, "JPShinjitaiCharacters.ocd2");
+new_sd_instance!(JPSHINJITAI_CHARACTERS_OCD, "JPShinjitaiCharacters.ocd2");
 #[cfg(feature = "static-dictionaries")]
-new_sd_instance!(JPSHINJITAI_CHARATERS_REV_OCD, "JPShinjitaiCharactersRev.ocd2");
+new_sd_instance!(JPSHINJITAI_CHARACTERS_REV_OCD, "JPShinjitaiCharactersRev.ocd2");
 #[cfg(feature = "static-dictionaries")]
 new_sd_instance!(JPSHINJITAI_PHRASES_OCD, "JPShinjitaiPhrases.ocd2");
 #[cfg(feature = "static-dictionaries")]
@@ -204,7 +205,7 @@ new_sd_instance!(TWVARIANTS_REV_OCD, "TWVariantsRev.ocd2");
 new_sd_instance!(TWVARIANTS_REV_PHRASES_OCD, "TWVariantsRevPhrases.ocd2");
 
 /// Default configs.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ordinalize)]
 pub enum DefaultConfig {
     /// Traditional Chinese (Hong Kong variant) to Simplified Chinese
     HK2S,
@@ -366,6 +367,7 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
 
     let mut output_data: Vec<&SD> = Vec::new();
 
+    // Each config JSON must be generated with every OCD2 dictionary file that it references.
     match config {
         DefaultConfig::HK2S => {
             output_data.push(&HK2S_JSON);
@@ -398,7 +400,7 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&JP2T_JSON);
             output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&JPSHINJITAI_PHRASES_OCD);
-            output_data.push(&JPSHINJITAI_CHARATERS_OCD);
+            output_data.push(&JPSHINJITAI_CHARACTERS_OCD);
         },
         DefaultConfig::S2HK => {
             output_data.push(&S2HK_JSON);
@@ -454,12 +456,13 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
         DefaultConfig::T2JP => {
             output_data.push(&T2JP_JSON);
             output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
-            output_data.push(&JPSHINJITAI_CHARATERS_REV_OCD);
+            output_data.push(&JPSHINJITAI_CHARACTERS_REV_OCD);
         },
         DefaultConfig::T2S => {
             output_data.push(&T2S_JSON);
             output_data.push(&CJK_COMPATIBILITY_IDEOGRAPHS_OCD);
             output_data.push(&TSPHRASES_OCD);
+            output_data.push(&TSCHARACTERS_EXT_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
         DefaultConfig::T2TW => {
@@ -475,6 +478,7 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
             output_data.push(&TSPHRASES_OCD);
+            output_data.push(&TSCHARACTERS_EXT_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
         DefaultConfig::TW2SP => {
@@ -485,6 +489,7 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
             output_data.push(&TSPHRASES_OCD);
+            output_data.push(&TSCHARACTERS_EXT_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
         DefaultConfig::TW2T => {
