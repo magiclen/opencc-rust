@@ -23,11 +23,11 @@ use opencc_rust::*;
 
 let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
 
-let s = opencc.convert("涼風有訊");
+let s = opencc.convert("涼風有訊").unwrap();
 
 assert_eq!("凉风有讯", &s);
 
-let s = opencc.convert_to_buffer("，秋月無邊", s);
+let s = opencc.convert_to_buffer("，秋月無邊", s).unwrap();
 
 assert_eq!("凉风有讯，秋月无边", &s);
 ```
@@ -37,11 +37,11 @@ use opencc_rust::*;
 
 let opencc = OpenCC::new(DefaultConfig::S2TWP).unwrap();
 
-let s = opencc.convert("凉风有讯");
+let s = opencc.convert("凉风有讯").unwrap();
 
 assert_eq!("涼風有訊", &s);
 
-let s = opencc.convert_to_buffer("，秋月无边", s);
+let s = opencc.convert_to_buffer("，秋月无边", s).unwrap();
 
 assert_eq!("涼風有訊，秋月無邊", &s);
 ```
@@ -70,12 +70,12 @@ generate_static_dictionary(&output_path, DefaultConfig::TW2SP).unwrap();
 
 let opencc = OpenCC::new(Path::join(&output_path, DefaultConfig::TW2SP)).unwrap();
 
-assert_eq!("凉风有讯", &opencc.convert("涼風有訊"));
+assert_eq!("凉风有讯", &opencc.convert("涼風有訊").unwrap());
 ```
 
 ## Supported Platforms
 
-This crate currently supports **Linux**. Other platforms are not guaranteed.
+This crate officially supports **Linux**. FreeBSD defaults and Windows library naming are handled on a best-effort basis, but those platforms are not guaranteed.
 
 ## Crates.io
 

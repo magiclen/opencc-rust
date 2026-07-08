@@ -17,7 +17,7 @@ fn generate_static_dictionary() {
 
     let opencc = OpenCC::new(output_path.path().join(DefaultConfig::TW2SP)).unwrap();
 
-    assert_eq!("无", &opencc.convert(s));
+    assert_eq!("无", &opencc.convert(s).unwrap());
 }
 
 #[test]

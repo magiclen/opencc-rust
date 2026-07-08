@@ -18,7 +18,11 @@ fn main() {
 
     for d in &lib_dirs {
         if !d.exists() {
-            panic!("OpenCC library directory does not exist: {}", d.to_string_lossy());
+            panic!(
+                "OpenCC library directory does not exist: {}. Set OPENCC_LIB_DIRS or OPENCC_DIR \
+                 to the correct OpenCC location.",
+                d.to_string_lossy()
+            );
         }
         println!("cargo:rustc-link-search=native={}", d.to_string_lossy());
     }
@@ -26,13 +30,17 @@ fn main() {
     let include_dirs = find_opencc_include_dirs();
     for d in &include_dirs {
         if !d.exists() {
-            panic!("OpenCC include directory does not exist: {}", d.to_string_lossy());
+            panic!(
+                "OpenCC include directory does not exist: {}. Set OPENCC_INCLUDE_DIRS or \
+                 OPENCC_DIR to the correct OpenCC location.",
+                d.to_string_lossy()
+            );
         }
         println!("cargo:include={}", d.to_string_lossy());
     }
     println!("cargo:rerun-if-env-changed=OPENCC_LIBS");
 
-    let target = env::var("TARGET").unwrap();
+    let target = env::var("TARGET").expect("Cargo did not provide TARGET to the build script.");
     let libs_env = env::var("OPENCC_LIBS").ok();
 
     let libs = match libs_env {
@@ -88,7 +96,10 @@ fn find_opencc_lib_dirs() -> Vec<PathBuf> {
         .map(|x| x.split(sep).map(PathBuf::from).collect::<Vec<PathBuf>>())
         .or_else(|_| Ok(vec![find_opencc_dir()?.join("lib")]))
         .or_else(|_: env::VarError| -> Result<_, env::VarError> { Ok(run_pkg_config().link_paths) })
-        .expect("Couldn't find OpenCC library directory")
+        .expect(
+            "Couldn't find OpenCC library directory. Set OPENCC_LIB_DIRS, OPENCC_DIR, or make \
+             pkg-config find OpenCC.",
+        )
 }
 
 fn find_opencc_include_dirs() -> Vec<PathBuf> {
@@ -102,7 +113,10 @@ fn find_opencc_include_dirs() -> Vec<PathBuf> {
         .or_else(|_: env::VarError| -> Result<_, env::VarError> {
             Ok(run_pkg_config().include_paths)
         })
-        .expect("Couldn't find OpenCC include directory")
+        .expect(
+            "Couldn't find OpenCC include directory. Set OPENCC_INCLUDE_DIRS, OPENCC_DIR, or make \
+             pkg-config find OpenCC.",
+        )
 }
 
 fn find_opencc_dir() -> Result<PathBuf, env::VarError> {
@@ -121,8 +135,12 @@ fn determine_mode<T: AsRef<str>>(libdirs: &[PathBuf], libs: &[T]) -> &'static st
 
     let files = libdirs
         .iter()
-        .flat_map(|d| d.read_dir().unwrap())
-        .map(|e| e.unwrap())
+        .flat_map(|d| {
+            d.read_dir().unwrap_or_else(|error| {
+                panic!("Cannot read OpenCC library directory {}: {}", d.to_string_lossy(), error)
+            })
+        })
+        .map(|e| e.expect("Cannot read an entry from the OpenCC library directory."))
         .map(|e| e.file_name())
         .filter_map(|e| e.into_string().ok())
         .collect::<HashSet<_>>();
@@ -141,9 +159,10 @@ fn determine_mode<T: AsRef<str>>(libdirs: &[PathBuf], libs: &[T]) -> &'static st
         (false, true) => return "dylib",
         (false, false) => {
             panic!(
-                "OpenCC libdirs at `{:?}` do not contain the required files to either statically \
-                 or dynamically link OpenCC",
-                libdirs
+                "OpenCC libdirs at `{:?}` do not contain libraries for {:?}. Set OPENCC_LIBS or \
+                 check OPENCC_LIB_DIRS.",
+                libdirs,
+                libs.iter().map(|l| l.as_ref()).collect::<Vec<_>>()
             );
         },
         (true, true) => {},
@@ -153,21 +172,24 @@ fn determine_mode<T: AsRef<str>>(libdirs: &[PathBuf], libs: &[T]) -> &'static st
 }
 
 fn run_pkg_config() -> pkg_config::Library {
-    pkg_config::Config::new()
+    let library = pkg_config::Config::new()
         .cargo_metadata(false)
         .atleast_version(MIN_VERSION)
         .probe("opencc")
-        .unwrap();
+        .expect(
+            "pkg-config could not find OpenCC. Set OPENCC_DIR, OPENCC_LIB_DIRS, \
+             OPENCC_INCLUDE_DIRS, and OPENCC_LIBS if OpenCC is not installed for pkg-config.",
+        );
 
     if !Command::new("pkg-config")
         .arg(format!("--max-version={}", MAX_VERSION))
         .arg("opencc")
         .status()
-        .unwrap()
+        .expect("Failed to run pkg-config for OpenCC version checking.")
         .success()
     {
         panic!("OpenCC version must be no higher than {}", MAX_VERSION);
     }
 
-    pkg_config::Config::new().cargo_metadata(false).probe("opencc").unwrap()
+    library
 }
