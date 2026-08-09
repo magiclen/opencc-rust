@@ -23,8 +23,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install doxygen cmake wget
-          wget https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.1.4.0.tar.gz
-          tar xf ver.1.4.0.tar.gz
+          wget https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.1.4.1.tar.gz
+          tar xf ver.1.4.1.tar.gz
           cd OpenCC-*
           make -j$(nproc) PREFIX=/usr
           sudo make PREFIX=/usr install
@@ -53,8 +53,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install doxygen cmake wget
-          wget https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.1.4.0.tar.gz
-          tar xf ver.1.4.0.tar.gz
+          wget https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.1.4.1.tar.gz
+          tar xf ver.1.4.1.tar.gz
           cd OpenCC-*
           make -j$(nproc) PREFIX=/usr
           sudo make PREFIX=/usr install
