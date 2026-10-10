@@ -1,9 +1,11 @@
-use std::{collections::HashSet, env, path::PathBuf, process::Command};
+use std::{collections::HashSet, env, path::PathBuf, sync::OnceLock};
 
 const MIN_VERSION: &str = "1.4.0";
 const MAX_VERSION: &str = "1.5.0";
 
 fn main() {
+    println!("cargo:rustc-check-cfg=cfg(docsrs)");
+
     if env::var("DOCS_RS").is_ok() {
         return;
     }
@@ -52,7 +54,7 @@ fn main() {
             } else if target.contains("freebsd") {
                 vec!["opencc".to_string()]
             } else {
-                run_pkg_config().libs
+                run_pkg_config().libs.clone()
             }
         },
     };
@@ -95,7 +97,9 @@ fn find_opencc_lib_dirs() -> Vec<PathBuf> {
     env::var("OPENCC_LIB_DIRS")
         .map(|x| x.split(sep).map(PathBuf::from).collect::<Vec<PathBuf>>())
         .or_else(|_| Ok(vec![find_opencc_dir()?.join("lib")]))
-        .or_else(|_: env::VarError| -> Result<_, env::VarError> { Ok(run_pkg_config().link_paths) })
+        .or_else(|_: env::VarError| -> Result<_, env::VarError> {
+            Ok(run_pkg_config().link_paths.clone())
+        })
         .expect(
             "Couldn't find OpenCC library directory. Set OPENCC_LIB_DIRS, OPENCC_DIR, or make \
              pkg-config find OpenCC.",
@@ -111,7 +115,7 @@ fn find_opencc_include_dirs() -> Vec<PathBuf> {
         .map(|x| x.split(sep).map(PathBuf::from).collect::<Vec<PathBuf>>())
         .or_else(|_| Ok(vec![find_opencc_dir()?.join("include")]))
         .or_else(|_: env::VarError| -> Result<_, env::VarError> {
-            Ok(run_pkg_config().include_paths)
+            Ok(run_pkg_config().include_paths.clone())
         })
         .expect(
             "Couldn't find OpenCC include directory. Set OPENCC_INCLUDE_DIRS, OPENCC_DIR, or make \
@@ -124,12 +128,15 @@ fn find_opencc_dir() -> Result<PathBuf, env::VarError> {
     env::var("OPENCC_DIR").map(PathBuf::from)
 }
 
-fn determine_mode<T: AsRef<str>>(libdirs: &[PathBuf], libs: &[T]) -> &'static str {
+fn opencc_static() -> Option<bool> {
     println!("cargo:rerun-if-env-changed=OPENCC_STATIC");
-    let kind = env::var("OPENCC_STATIC").ok();
-    match kind.as_ref().map(|s| &s[..]) {
-        Some("0") => return "dylib",
-        Some(_) => return "static",
+    env::var("OPENCC_STATIC").ok().map(|kind| kind != "0")
+}
+
+fn determine_mode<T: AsRef<str>>(libdirs: &[PathBuf], libs: &[T]) -> &'static str {
+    match opencc_static() {
+        Some(true) => return "static",
+        Some(false) => return "dylib",
         None => {},
     }
 
@@ -171,25 +178,22 @@ fn determine_mode<T: AsRef<str>>(libdirs: &[PathBuf], libs: &[T]) -> &'static st
     "dylib"
 }
 
-fn run_pkg_config() -> pkg_config::Library {
-    let library = pkg_config::Config::new()
-        .cargo_metadata(false)
-        .atleast_version(MIN_VERSION)
-        .probe("opencc")
-        .expect(
-            "pkg-config could not find OpenCC. Set OPENCC_DIR, OPENCC_LIB_DIRS, \
-             OPENCC_INCLUDE_DIRS, and OPENCC_LIBS if OpenCC is not installed for pkg-config.",
-        );
+fn run_pkg_config() -> &'static pkg_config::Library {
+    static LIBRARY: OnceLock<pkg_config::Library> = OnceLock::new();
 
-    if !Command::new("pkg-config")
-        .arg(format!("--max-version={}", MAX_VERSION))
-        .arg("opencc")
-        .status()
-        .expect("Failed to run pkg-config for OpenCC version checking.")
-        .success()
-    {
-        panic!("OpenCC version must be no higher than {}", MAX_VERSION);
-    }
+    LIBRARY.get_or_init(|| {
+        let mut config = pkg_config::Config::new();
 
-    library
+        config.cargo_metadata(false).range_version(MIN_VERSION..=MAX_VERSION);
+
+        if let Some(statik) = opencc_static() {
+            config.statik(statik);
+        }
+
+        config.probe("opencc").expect(
+            "pkg-config could not find OpenCC in the supported version range. Set OPENCC_DIR, \
+             OPENCC_LIB_DIRS, OPENCC_INCLUDE_DIRS, and OPENCC_LIBS if OpenCC is not installed for \
+             pkg-config.",
+        )
+    })
 }

@@ -12,7 +12,7 @@ To compile this crate, you need to compile the OpenCC C++ library first. You can
 * `OPENCC_LIB_DIRS`: The directories of library files, like `-L`. Use `:` to separate.
 * `OPENCC_LIBS`: The library names that you want to link, like `-l`. Use `:` to separate. Typically, it contains **opencc:marisa**.
 * `OPENCC_INCLUDE_DIRS`: The directories of header files, like `-i`. Use `:` to separate.
-* `OPENCC_STATIC`: Whether to use `static` or `dylib`.
+* `OPENCC_STATIC`: Set to `0` for dynamic linking, or any other value for static linking. If unset, the library files determine the linking mode.
 * `OPENCC_DYLIB_STDCPP`: If you use `static` linking, and your OpenCC library is compiled by the GNU C, this environment variable should be set.
 * `OPENCC_STATIC_STDCPP`: If you use `static` linking, and your OpenCC library is compiled by musl libc, this environment variable should be set.
 
@@ -57,18 +57,28 @@ features = ["static-dictionaries"]
 ```
 Then, the `generate_static_dictionary` and `generate_static_dictionaries` functions are available.
 
-The default OpenCC dictionaries will be compiled into the binary file by `lazy_static_include` crate. And you can use the two functions to recover them on demand.
+The `lazy_static_include` crate embeds the default OpenCC dictionaries when `debug_assertions` is disabled, as in the default release profile.
+When `debug_assertions` is enabled, as in the default debug profile, it reads the original dictionary files at runtime, so those files must remain at their original paths.
+You can use the two functions to recover the dictionaries on demand.
+Existing files in the output directory are not overwritten, so delete them before generating the dictionaries again after upgrading this crate.
+
+This feature only provides dictionary files.
+You still need to link the OpenCC library.
+Dynamic linking also requires that library at runtime.
+The bundled `.ocd2` files are little-endian, so they cannot be used on big-endian targets.
 
 For example,
 
 ```rust
+use std::path::Path;
+
 use opencc_rust::*;
 
 let output_path = "/path/to/dictionaries-directory";
 
 generate_static_dictionary(&output_path, DefaultConfig::TW2SP).unwrap();
 
-let opencc = OpenCC::new(Path::join(&output_path, DefaultConfig::TW2SP)).unwrap();
+let opencc = OpenCC::new(Path::new(output_path).join(DefaultConfig::TW2SP)).unwrap();
 
 assert_eq!("凉风有讯", &opencc.convert("涼風有訊").unwrap());
 ```

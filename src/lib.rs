@@ -8,7 +8,7 @@ To compile this crate, you need to compile the OpenCC C++ library first. You can
 * `OPENCC_LIB_DIRS`: The directories of library files, like `-L`. Use `:` to separate.
 * `OPENCC_LIBS`: The library names that you want to link, like `-l`. Use `:` to separate. Typically, it contains **opencc:marisa**.
 * `OPENCC_INCLUDE_DIRS`: The directories of header files, like `-i`. Use `:` to separate.
-* `OPENCC_STATIC`: Whether to use `static` or `dylib`.
+* `OPENCC_STATIC`: Set to `0` for dynamic linking, or any other value for static linking. If unset, the library files determine the linking mode.
 * `OPENCC_DYLIB_STDCPP`: If you use `static` linking, and your OpenCC library is compiled by the GNU C, this environment variable should be set.
 * `OPENCC_STATIC_STDCPP`: If you use `static` linking, and your OpenCC library is compiled by musl libc, this environment variable should be set.
 
@@ -53,20 +53,33 @@ features = ["static-dictionaries"]
 ```
 Then, the `generate_static_dictionary` and `generate_static_dictionaries` functions are available.
 
-The default OpenCC dictionaries will be compiled into the binary file by `lazy_static_include` crate. And you can use the two functions to recover them on demand.
+The `lazy_static_include` crate embeds the default OpenCC dictionaries when `debug_assertions` is disabled, as in the default release profile.
+When `debug_assertions` is enabled, as in the default debug profile, it reads the original dictionary files at runtime, so those files must remain at their original paths.
+You can use the two functions to recover the dictionaries on demand.
+Existing files in the output directory are not overwritten, so delete them before generating the dictionaries again after upgrading this crate.
+
+This feature only provides dictionary files.
+You still need to link the OpenCC library.
+Dynamic linking also requires that library at runtime.
+The bundled `.ocd2` files are little-endian, so they cannot be used on big-endian targets.
 
 For example,
 
-```rust,ignore
+```rust,no_run
+# #[cfg(feature = "static-dictionaries")]
+# {
+use std::path::Path;
+
 use opencc_rust::*;
 
 let output_path = "/path/to/dictionaries-directory";
 
 generate_static_dictionary(&output_path, DefaultConfig::TW2SP).unwrap();
 
-let opencc = OpenCC::new(Path::join(&output_path, DefaultConfig::TW2SP)).unwrap();
+let opencc = OpenCC::new(Path::new(output_path).join(DefaultConfig::TW2SP)).unwrap();
 
 assert_eq!("凉风有讯", &opencc.convert("涼風有訊").unwrap());
+# }
 ```
 */
 
@@ -86,7 +99,7 @@ use std::{
     ffi::{CStr, CString},
     fmt,
     path::Path,
-    sync::Mutex,
+    sync::{Mutex, MutexGuard},
 };
 
 use enum_ordinalize::Ordinalize;
@@ -94,20 +107,57 @@ use libc::{c_char, c_int, c_void, size_t};
 
 #[link(name = "opencc")]
 unsafe extern "C" {
+    /// Open a converter from a config path, or return `usize::MAX as *mut c_void` on error.
+    ///
+    /// # Safety
+    /// The path must be null or point to a readable null-terminated string for the whole call.
+    /// This call must be serialized with other calls that can update or read the OpenCC error, including wrapper calls.
     pub fn opencc_open(config_file_path: *const c_char) -> *mut c_void;
+
+    /// Close a converter.
+    ///
+    /// # Safety
+    /// The handle must be valid, must not be used by another call, and must not be closed again.
     pub fn opencc_close(opencc: *mut c_void) -> c_int;
+
+    /// Convert UTF-8 text and return an allocated C string, or null on error.
+    ///
+    /// # Safety
+    /// The handle must stay valid for the whole call, and the input must point to readable valid UTF-8 bytes of the given length.
+    /// If the length is `size_t::MAX`, the input must be null-terminated instead.
+    /// This call must be serialized with other calls that can update or read the OpenCC error, including wrapper calls.
+    /// A non-null result must be released once with `opencc_convert_utf8_free`.
     pub fn opencc_convert_utf8(
         opencc: *mut c_void,
         input: *const c_char,
         length: size_t,
     ) -> *mut c_char;
+
+    /// Convert UTF-8 text into an output buffer and return its byte length, or `size_t::MAX` on error.
+    ///
+    /// # Safety
+    /// The handle must stay valid for the whole call, and the input must point to readable valid UTF-8 bytes of the given length.
+    /// If the length is `size_t::MAX`, the input must be null-terminated instead.
+    /// The output must point to writable memory large enough for the full result and its null byte, and must not overlap the input.
+    /// This call must be serialized with other calls that can update or read the OpenCC error, including wrapper calls.
     pub fn opencc_convert_utf8_to_buffer(
         opencc: *mut c_void,
         input: *const c_char,
         length: size_t,
         output: *mut c_char,
     ) -> size_t;
+
+    /// Release a C string returned by OpenCC.
+    ///
+    /// # Safety
+    /// The pointer must be null or point to a live allocation returned by `opencc_convert_utf8`, and it must not be used or freed again.
     pub fn opencc_convert_utf8_free(str: *mut c_char);
+
+    /// Get the last OpenCC error message.
+    ///
+    /// # Safety
+    /// This call and reads through its result must be serialized with calls that can update the OpenCC error, including wrapper calls.
+    /// The result must not be freed and stays valid only until the next error update.
     pub fn opencc_error() -> *const c_char;
 }
 
@@ -320,19 +370,39 @@ impl fmt::Display for OpenCCError {
 
 impl std::error::Error for OpenCCError {}
 
+struct ConvertedOutput(*mut c_char);
+
+impl ConvertedOutput {
+    fn as_str(&self) -> Result<&str, OpenCCError> {
+        // SAFETY: This value owns a non-null OpenCC allocation that stays valid until it is dropped.
+        unsafe { CStr::from_ptr(self.0) }.to_str().map_err(|_| OpenCCError::InvalidOutput)
+    }
+}
+
+impl Drop for ConvertedOutput {
+    fn drop(&mut self) {
+        // SAFETY: This value releases its allocation once with the matching OpenCC function.
+        unsafe {
+            opencc_convert_utf8_free(self.0);
+        }
+    }
+}
+
 static OPENCC_ERROR_LOCK: Mutex<()> = Mutex::new(());
 
-fn opencc_error_lock() -> std::sync::MutexGuard<'static, ()> {
+fn opencc_error_lock() -> MutexGuard<'static, ()> {
     OPENCC_ERROR_LOCK.lock().unwrap_or_else(|error| error.into_inner())
 }
 
-fn last_opencc_error() -> OpenCCError {
+fn last_opencc_error(_lock: &MutexGuard<'static, ()>) -> OpenCCError {
+    // SAFETY: The caller holds the error lock, so no other call can update the OpenCC error.
     let error = unsafe { opencc_error() };
 
     if error.is_null() {
         return OpenCCError::OpenCC("OpenCC returned an unknown error.".to_string());
     }
 
+    // SAFETY: The error string is null-terminated and stays valid while the error lock is held.
     match unsafe { CStr::from_ptr(error) }.to_str() {
         Ok(message) if !message.is_empty() => OpenCCError::OpenCC(message.to_string()),
         _ => OpenCCError::OpenCC("OpenCC returned an unreadable error message.".to_string()),
@@ -355,11 +425,12 @@ impl OpenCC {
 
         // OpenCC stores the last error globally, so the failing call and error read share one lock.
         let opencc = {
-            let _lock = opencc_error_lock();
+            let lock = opencc_error_lock();
+            // SAFETY: The path is a valid C string, and the error lock is held.
             let opencc = unsafe { opencc_open(config_file_path.as_ptr()) };
 
             if opencc.is_null() || opencc as usize == usize::MAX {
-                return Err(last_opencc_error());
+                return Err(last_opencc_error(&lock));
             }
 
             opencc
@@ -374,29 +445,13 @@ impl OpenCC {
     pub fn convert<S: AsRef<str>>(&self, input: S) -> Result<String, OpenCCError> {
         let input = input.as_ref();
 
-        let length = input.len();
-        let input = CString::new(input).map_err(|_| OpenCCError::InputContainsNul)?;
-
-        let result_ptr = {
-            let _lock = opencc_error_lock();
-            let result_ptr = unsafe { opencc_convert_utf8(self.opencc, input.as_ptr(), length) };
-
-            if result_ptr.is_null() {
-                return Err(last_opencc_error());
-            }
-
-            result_ptr
-        };
-
-        let result_cstr = unsafe { CStr::from_ptr(result_ptr) };
-        let result =
-            result_cstr.to_str().map(str::to_string).map_err(|_| OpenCCError::InvalidOutput);
-
-        unsafe {
-            opencc_convert_utf8_free(result_ptr);
+        if input.is_empty() {
+            return Ok(String::new());
         }
 
-        result
+        let result = self.convert_inner(input)?;
+
+        Ok(result.as_str()?.to_string())
     }
 
     /// Convert a string to another string and store into a buffer.
@@ -405,15 +460,42 @@ impl OpenCC {
         input: S,
         mut output: String,
     ) -> Result<String, OpenCCError> {
-        output.push_str(&self.convert(input)?);
+        let input = input.as_ref();
+
+        if input.is_empty() {
+            return Ok(output);
+        }
+
+        let result = self.convert_inner(input)?;
+
+        output.push_str(result.as_str()?);
 
         Ok(output)
+    }
+
+    fn convert_inner(&self, input: &str) -> Result<ConvertedOutput, OpenCCError> {
+        if input.as_bytes().contains(&0) {
+            return Err(OpenCCError::InputContainsNul);
+        }
+
+        let lock = opencc_error_lock();
+
+        // SAFETY: OpenCC reads the valid UTF-8 input using its byte length and does not keep the pointer.
+        let result_ptr =
+            unsafe { opencc_convert_utf8(self.opencc, input.as_ptr().cast(), input.len()) };
+
+        if result_ptr.is_null() {
+            return Err(last_opencc_error(&lock));
+        }
+
+        Ok(ConvertedOutput(result_ptr))
     }
 }
 
 impl Drop for OpenCC {
     fn drop(&mut self) {
         if !self.opencc.is_null() {
+            // SAFETY: The handle came from `opencc_open`, and `&mut self` means no other call is using it.
             unsafe {
                 opencc_close(self.opencc);
             }
@@ -438,7 +520,6 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&TSPHRASES_OCD);
             output_data.push(&HKVARIANTS_REV_PHRASES_OCD);
             output_data.push(&HKVARIANTS_REV_OCD);
-            output_data.push(&TSPHRASES_OCD);
             output_data.push(&TSCHARACTERS_EXT_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
@@ -449,7 +530,6 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&HKPHRASES_REV_OCD);
             output_data.push(&HKVARIANTS_REV_PHRASES_OCD);
             output_data.push(&HKVARIANTS_REV_OCD);
-            output_data.push(&TSPHRASES_OCD);
             output_data.push(&TSCHARACTERS_EXT_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
@@ -540,7 +620,6 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&TSPHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
-            output_data.push(&TSPHRASES_OCD);
             output_data.push(&TSCHARACTERS_EXT_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
@@ -551,7 +630,6 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
             output_data.push(&TWPHRASES_REV_OCD);
             output_data.push(&TWVARIANTS_REV_PHRASES_OCD);
             output_data.push(&TWVARIANTS_REV_OCD);
-            output_data.push(&TSPHRASES_OCD);
             output_data.push(&TSCHARACTERS_EXT_OCD);
             output_data.push(&TSCHARACTERS_OCD);
         },
@@ -576,9 +654,25 @@ fn generate_static_dictionary_inner<P: AsRef<Path>>(
 
         let mut file = File::create(output_path).map_err(|_| "Cannot create a new file.")?;
 
-        file.write(data.1).map_err(|_| "Cannot write data to a file.")?;
+        file.write_all(data.1).map_err(|_| "Cannot write data to a file.")?;
 
         file.flush().map_err(|_| "Cannot flush file.")?;
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "static-dictionaries")]
+fn prepare_output_dir(path: &Path) -> Result<(), &'static str> {
+    if path.exists() {
+        if !path.is_dir() {
+            return Err("The path of static dictionaries needs to be a directory.");
+        }
+    } else {
+        match fs::create_dir_all(path) {
+            Ok(_) => (),
+            Err(_) => return Err("Cannot create new directories."),
+        }
     }
 
     Ok(())
@@ -592,16 +686,7 @@ pub fn generate_static_dictionary<P: AsRef<Path>>(
 ) -> Result<(), &'static str> {
     let path = path.as_ref();
 
-    if path.exists() {
-        if !path.is_dir() {
-            return Err("The path of static dictionaries needs to be a directory.");
-        }
-    } else {
-        match fs::create_dir_all(path) {
-            Ok(_) => (),
-            Err(_) => return Err("Cannot create new directories."),
-        }
-    }
+    prepare_output_dir(path)?;
 
     generate_static_dictionary_inner(path, config)
 }
@@ -614,16 +699,7 @@ pub fn generate_static_dictionaries<P: AsRef<Path>>(
 ) -> Result<(), &'static str> {
     let path = path.as_ref();
 
-    if path.exists() {
-        if !path.is_dir() {
-            return Err("The path of static dictionaries needs to be a directory.");
-        }
-    } else {
-        match fs::create_dir_all(path) {
-            Ok(_) => (),
-            Err(_) => return Err("Cannot create new directories."),
-        }
-    }
+    prepare_output_dir(path)?;
 
     for config in configs.iter().copied() {
         generate_static_dictionary_inner(path, config)?

@@ -1,6 +1,27 @@
 use opencc_rust::{DefaultConfig, OpenCC};
 
 #[test]
+fn empty() {
+    let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
+
+    assert_eq!("", &opencc.convert("").unwrap());
+    assert_eq!("涼風有訊", &opencc.convert_to_buffer("", String::from("涼風有訊")).unwrap());
+}
+
+#[test]
+fn str_slice() {
+    let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
+    let s = String::from("OpenCC Rust trailing text");
+    let input = &s[..11];
+
+    assert_eq!("OpenCC Rust", &opencc.convert(input).unwrap());
+    assert_eq!(
+        "涼風有訊OpenCC Rust",
+        &opencc.convert_to_buffer(input, String::from("涼風有訊")).unwrap()
+    );
+}
+
+#[test]
 fn tw2sp() {
     let opencc = OpenCC::new(DefaultConfig::TW2SP).unwrap();
     assert_eq!(
